@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ideas Dashboard</title>
+    <title>Incubadora de Ideas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -705,7 +705,7 @@
     <div class="app">
         <header class="header">
             <div class="header-left">
-                <h1>🎯 Ideas Dashboard</h1>
+                <h1>🎯 Incubadora de Ideas</h1>
                 <p class="subtitle">Organiza y prioriza tus proyectos</p>
             </div>
             <div class="sync-status">
@@ -1055,6 +1055,7 @@
             container.innerHTML = '';
             
             if (!card.checklists) card.checklists = [];
+            currentEditingCard = card;
             
             card.checklists.forEach((checklist, checklistIndex) => {
                 const checklistEl = document.createElement('div');
@@ -1080,9 +1081,9 @@
                 deleteBtn.innerHTML = '×';
                 deleteBtn.title = 'Eliminar checklist';
                 deleteBtn.addEventListener('click', () => {
-                    card.checklists.splice(checklistIndex, 1);
-                    saveCard(card);
-                    renderChecklists(card);
+                    currentEditingCard.checklists.splice(checklistIndex, 1);
+                    saveCard(currentEditingCard);
+                    renderChecklists(currentEditingCard);
                 });
                 header.appendChild(deleteBtn);
                 
@@ -1116,8 +1117,8 @@
                     checkbox.className = 'item-checkbox' + (item.checked ? ' checked' : '');
                     checkbox.addEventListener('click', () => {
                         item.checked = !item.checked;
-                        saveCard(card);
-                        renderChecklists(card);
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
                     });
                     itemEl.appendChild(checkbox);
                     
@@ -1137,8 +1138,8 @@
                     deleteItemBtn.innerHTML = '×';
                     deleteItemBtn.addEventListener('click', () => {
                         checklist.items.splice(itemIndex, 1);
-                        saveCard(card);
-                        renderChecklists(card);
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
                     });
                     itemEl.appendChild(deleteItemBtn);
                     
@@ -1154,8 +1155,8 @@
                 addItemBtn.addEventListener('click', () => {
                     if (!checklist.items) checklist.items = [];
                     checklist.items.push({ id: Date.now().toString(), text: '', checked: false });
-                    saveCard(card);
-                    renderChecklists(card);
+                    saveCard(currentEditingCard);
+                    renderChecklists(currentEditingCard);
                 });
                 checklistEl.appendChild(addItemBtn);
                 
@@ -1199,6 +1200,7 @@
         function closeModal() {
             document.getElementById('modal-backdrop').classList.add('hidden');
             selectedCardId = null;
+            currentEditingCard = null;
         }
 
         function updateCard() {
@@ -1230,17 +1232,19 @@
         });
 
         document.getElementById('add-checklist-btn').addEventListener('click', () => {
-            const card = cards.find(c => c.id === selectedCardId);
-            if (!card) return;
+            if (!currentEditingCard) {
+                currentEditingCard = cards.find(c => c.id === selectedCardId);
+            }
+            if (!currentEditingCard) return;
             
-            if (!card.checklists) card.checklists = [];
-            card.checklists.push({
+            if (!currentEditingCard.checklists) currentEditingCard.checklists = [];
+            currentEditingCard.checklists.push({
                 id: Date.now().toString(),
                 title: 'Nuevo Checklist',
                 items: []
             });
-            saveCard(card);
-            renderChecklists(card);
+            saveCard(currentEditingCard);
+            renderChecklists(currentEditingCard);
         });
 
         let debounceTimer;
@@ -1250,11 +1254,14 @@
         }
 
         let checklistDebounceTimer;
+        let currentEditingCard = null;
+        
         function debounceSaveCard() {
             clearTimeout(checklistDebounceTimer);
             checklistDebounceTimer = setTimeout(() => {
-                const card = cards.find(c => c.id === selectedCardId);
-                if (card) saveCard(card);
+                if (currentEditingCard) {
+                    saveCard(currentEditingCard);
+                }
             }, 300);
         }
 
