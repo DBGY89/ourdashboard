@@ -1020,6 +1020,21 @@
         .task-summary-add-form.visible {
             display: flex;
         }
+        .task-summary-add-form select {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 12px;
+            min-width: 90px;
+        }
+        .form-hint {
+            display: block;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 4px;
+        }
         .task-summary-add-form input {
             flex: 1;
             background: rgba(255, 255, 255, 0.06);
@@ -1182,8 +1197,16 @@
                 <h2>Task summary</h2>
                 <div class="tasks-summary-grid">
                     <div class="tasks-summary-column">
-                        <h3>Team</h3>
+                        <h3>Team <button type="button" class="task-summary-add-btn" id="add-task-team-btn" title="Add team task">+</button></h3>
                         <div id="tasks-team"></div>
+                        <div class="task-summary-add-form" id="add-form-team">
+                            <input type="text" id="add-task-team-input" placeholder="Task description...">
+                            <select id="add-task-team-assignee">
+                                <option value="Mildred">Mildred</option>
+                                <option value="Diana">Diana</option>
+                            </select>
+                            <button type="button" id="add-task-team-submit">Add</button>
+                        </div>
                         <div class="tasks-summary-done-section">
                             <button type="button" class="tasks-summary-done-toggle" id="tasks-team-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
                             <div id="tasks-team-done-list" class="tasks-summary-done-list"></div>
@@ -1226,6 +1249,14 @@
             </div>
 
             <div class="modal-body">
+                <div class="form-section">
+                    <label>Project type</label>
+                    <select class="select-input" id="modal-project-type">
+                        <option value="individual">Individual</option>
+                        <option value="team">Team</option>
+                    </select>
+                    <span class="form-hint">Individual → Mildred/Diana columns. Team → Team column with M/D badge.</span>
+                </div>
                 <div class="form-section">
                     <label>Project Manager</label>
                     <select class="select-input" id="modal-pm">
@@ -1539,6 +1570,7 @@
         function getTeamTasks() {
             const list = [];
             cards.forEach(card => {
+                if ((card.projectType || 'individual') !== 'team') return;
                 (card.checklists || []).forEach((checklist) => {
                     (checklist.items || []).forEach((item) => {
                         if (item.assignee === 'Mildred' || item.assignee === 'Diana') {
@@ -1547,13 +1579,26 @@
                     });
                 });
             });
+            (generalTasks || []).forEach(task => {
+                if (task.isTeam) list.push({ type: 'general', task });
+            });
             return list;
         }
 
         function getTasksByAssignee() {
             const mildred = [];
             const diana = [];
+            cards.forEach(card => {
+                if ((card.projectType || 'individual') !== 'individual') return;
+                (card.checklists || []).forEach((checklist) => {
+                    (checklist.items || []).forEach((item) => {
+                        if (item.assignee === 'Mildred') mildred.push({ type: 'card', card, item, cardId: card.id });
+                        if (item.assignee === 'Diana') diana.push({ type: 'card', card, item, cardId: card.id });
+                    });
+                });
+            });
             (generalTasks || []).forEach(task => {
+                if (task.isTeam) return;
                 if (task.assignee === 'Mildred') mildred.push({ type: 'general', task });
                 if (task.assignee === 'Diana') diana.push({ type: 'general', task });
             });
@@ -1567,13 +1612,13 @@
 
         function renderTasksSummary() {
             const teamList = getTeamTasks();
-            const teamActive = teamList.filter(e => (e.item.status || 'todo') !== 'done');
-            const teamDone = teamList.filter(e => (e.item.status || 'todo') === 'done');
+            const teamActive = teamList.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const teamDone = teamList.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
             const { mildred, diana } = getTasksByAssignee();
-            const mildredActive = mildred.filter(e => (e.task.status || 'todo') !== 'done');
-            const mildredDone = mildred.filter(e => (e.task.status || 'todo') === 'done');
-            const dianaActive = diana.filter(e => (e.task.status || 'todo') !== 'done');
-            const dianaDone = diana.filter(e => (e.task.status || 'todo') === 'done');
+            const mildredActive = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const mildredDone = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+            const dianaActive = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const dianaDone = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
 
             function makeStatusBadge(entry, status, div) {
                 const badge = div.querySelector('.task-status-badge');
@@ -1595,9 +1640,12 @@
             }
 
             function assigneeBadge(entry) {
-                if (entry.type !== 'card' || !entry.item.assignee) return '';
-                const c = entry.item.assignee === 'Mildred' ? 'm' : 'd';
-                const l = entry.item.assignee === 'Mildred' ? 'M' : 'D';
+                let assignee = null;
+                if (entry.type === 'card' && entry.item.assignee) assignee = entry.item.assignee;
+                if (entry.type === 'general' && entry.task.isTeam && entry.task.assignee) assignee = entry.task.assignee;
+                if (!assignee) return '';
+                const c = assignee === 'Mildred' ? 'm' : 'd';
+                const l = assignee === 'Mildred' ? 'M' : 'D';
                 return `<span class="task-assignee-badge ${c}">${l}</span>`;
             }
 
@@ -1626,9 +1674,11 @@
                         `;
                         div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-status-badge') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
                     } else {
+                        const abGeneral = showAssigneeBadge ? assigneeBadge(entry) : '';
                         div.innerHTML = `
                             <span class="task-card-title">General</span>
                             <span class="task-text" title="${textEsc}">${text}</span>
+                            ${abGeneral}
                             <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
                             <button type="button" class="task-delete-btn" title="Delete">×</button>
                         `;
@@ -1721,6 +1771,37 @@
                     text,
                     assignee,
                     status: 'todo',
+                    createdAt: new Date().toISOString(),
+                };
+                saveGeneralTask(task);
+                input.value = '';
+                form.classList.remove('visible');
+            }
+            submit.addEventListener('click', addTask);
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+        }
+
+        function setupTeamTaskAdd() {
+            const btn = document.getElementById('add-task-team-btn');
+            const form = document.getElementById('add-form-team');
+            const input = document.getElementById('add-task-team-input');
+            const assigneeSelect = document.getElementById('add-task-team-assignee');
+            const submit = document.getElementById('add-task-team-submit');
+            if (!btn || !form || !input || !assigneeSelect || !submit) return;
+            btn.addEventListener('click', () => {
+                form.classList.toggle('visible');
+                if (form.classList.contains('visible')) input.focus();
+            });
+            function addTask() {
+                const text = (input.value || '').trim();
+                if (!text) return;
+                const assignee = assigneeSelect.value || 'Mildred';
+                const task = {
+                    id: Date.now().toString(),
+                    text,
+                    assignee,
+                    status: 'todo',
+                    isTeam: true,
                     createdAt: new Date().toISOString(),
                 };
                 saveGeneralTask(task);
@@ -1891,6 +1972,7 @@
                 target: '',
                 scope: '',
                 risks: '',
+                projectType: 'individual',
                 projectManager: '',
                 scores: { ...DEFAULT_SCORES },
                 checklists: [],
@@ -2107,6 +2189,10 @@
             if (pmSelect) {
                 pmSelect.value = card.projectManager || '';
             }
+            const projectTypeSelect = document.getElementById('modal-project-type');
+            if (projectTypeSelect) {
+                projectTypeSelect.value = card.projectType || 'individual';
+            }
 
             const columnSelect = document.getElementById('modal-column');
             columnSelect.innerHTML = '';
@@ -2146,6 +2232,8 @@
             card.columnId = document.getElementById('modal-column').value;
             const pmEl = document.getElementById('modal-pm');
             if (pmEl) card.projectManager = pmEl.value || '';
+            const projectTypeEl = document.getElementById('modal-project-type');
+            if (projectTypeEl) card.projectType = projectTypeEl.value || 'individual';
             
             saveCard(card);
         }
@@ -2205,9 +2293,12 @@
         document.getElementById('modal-column').addEventListener('change', updateCard);
         const modalPm = document.getElementById('modal-pm');
         if (modalPm) modalPm.addEventListener('change', updateCard);
+        const modalProjectType = document.getElementById('modal-project-type');
+        if (modalProjectType) modalProjectType.addEventListener('change', updateCard);
 
         setupGeneralTaskAdd('Mildred');
         setupGeneralTaskAdd('Diana');
+        setupTeamTaskAdd();
     </script>
 </body>
 </html>
