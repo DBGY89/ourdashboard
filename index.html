@@ -933,6 +933,20 @@
         .task-summary-item .task-status-badge.todo { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
         .task-summary-item .task-status-badge.in_progress { background: rgba(245,158,11,0.25); color: #fbbf24; }
         .task-summary-item .task-status-badge.done { background: rgba(16,185,129,0.25); color: #34d399; }
+        .task-summary-item .task-status-select {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+            min-width: 90px;
+        }
+        .task-summary-item .task-status-select.todo { color: rgba(255,255,255,0.7); }
+        .task-summary-item .task-status-select.in_progress { color: #fbbf24; border-color: rgba(245,158,11,0.4); }
+        .task-summary-item .task-status-select.done { color: #34d399; border-color: rgba(16,185,129,0.4); }
         .task-summary-item .task-assignee-badge {
             flex-shrink: 0;
             width: 20px;
@@ -1069,6 +1083,23 @@
             cursor: pointer;
             padding: 2px 6px;
             font-size: 14px;
+        }
+        .task-summary-item .task-unassign-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 0;
+        }
+        .task-summary-item .task-unassign-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #f87171;
         }
         .task-summary-item .task-delete-btn:hover {
             color: #ef4444;
@@ -1620,23 +1651,24 @@
             const dianaActive = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
             const dianaDone = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
 
-            function makeStatusBadge(entry, status, div) {
-                const badge = div.querySelector('.task-status-badge');
-                if (!badge) return;
-                badge.textContent = STATUS_LABELS[status] || status;
-                badge.className = 'task-status-badge ' + (status || 'todo');
-                badge.addEventListener('click', (e) => {
+            function setupStatusSelect(entry, status, div) {
+                const sel = div.querySelector('.task-status-select');
+                if (!sel) return;
+                sel.value = status || 'todo';
+                sel.className = 'task-status-select ' + (status || 'todo');
+                sel.addEventListener('change', (e) => {
                     e.stopPropagation();
-                    const next = cycleStatus(status);
+                    const newStatus = sel.value;
                     if (entry.type === 'card') {
-                        entry.item.status = next;
+                        entry.item.status = newStatus;
                         saveCard(entry.card);
                     } else {
-                        entry.task.status = next;
+                        entry.task.status = newStatus;
                         saveGeneralTask(entry.task);
                     }
                     renderTasksSummary();
                 });
+                sel.addEventListener('click', (e) => e.stopPropagation());
             }
 
             function assigneeBadge(entry) {
@@ -1665,26 +1697,34 @@
                     const titleEsc = (title || '').replace(/"/g, '&quot;');
                     const textEsc = (text || '').replace(/"/g, '&quot;');
                     const ab = showAssigneeBadge ? assigneeBadge(entry) : '';
+                    const statusOptions = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
                     if (entry.type === 'card') {
                         div.innerHTML = `
                             <span class="task-card-title" title="${titleEsc}">${titleShort}</span>
                             <span class="task-text" title="${textEsc}">${text}</span>
                             ${ab}
-                            <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
+                            <select class="task-status-select ${status}" title="Change status">${statusOptions}</select>
+                            <button type="button" class="task-unassign-btn" title="Remove from assignment (stays in card)">×</button>
                         `;
-                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-status-badge') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-unassign-btn') && !e.target.classList.contains('task-status-select') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                        div.querySelector('.task-unassign-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            entry.item.assignee = '';
+                            saveCard(entry.card);
+                            renderTasksSummary();
+                        });
                     } else {
                         const abGeneral = showAssigneeBadge ? assigneeBadge(entry) : '';
                         div.innerHTML = `
                             <span class="task-card-title">General</span>
                             <span class="task-text" title="${textEsc}">${text}</span>
                             ${abGeneral}
-                            <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
+                            <select class="task-status-select ${status}" title="Change status">${statusOptions}</select>
                             <button type="button" class="task-delete-btn" title="Delete">×</button>
                         `;
                         div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
                     }
-                    makeStatusBadge(entry, status, div);
+                    setupStatusSelect(entry, status, div);
                     el.appendChild(div);
                 });
                 if (activeList.length === 0) {
@@ -1709,24 +1749,40 @@
                         doneList.forEach(entry => {
                             const div = document.createElement('div');
                             div.className = 'task-summary-item done-item' + (entry.type === 'general' ? ' general' : '');
+                            const status = entry.type === 'card' ? (entry.item.status || 'done') : (entry.task.status || 'done');
                             const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
                             const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
                             const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
                             const abDone = showAssigneeBadge ? assigneeBadge(entry) : '';
-                            div.innerHTML = `
-                                <span class="task-card-title">${titleShort}</span>
-                                <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
-                                ${abDone}
-                                <span class="task-status-badge done">${STATUS_LABELS.done}</span>
-                                ${entry.type === 'general' ? '<button type="button" class="task-delete-btn" title="Delete">×</button>' : ''}
-                            `;
+                            const statusOptionsDone = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
                             if (entry.type === 'card') {
-                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-status-badge') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                                div.innerHTML = `
+                                    <span class="task-card-title">${titleShort}</span>
+                                    <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                    ${abDone}
+                                    <select class="task-status-select done">${statusOptionsDone}</select>
+                                    <button type="button" class="task-unassign-btn" title="Remove from assignment (stays in card)">×</button>
+                                `;
+                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-unassign-btn') && !e.target.classList.contains('task-status-select') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                                div.querySelector('.task-unassign-btn').addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    entry.item.assignee = '';
+                                    saveCard(entry.card);
+                                    renderTasksSummary();
+                                });
                             } else {
+                                div.innerHTML = `
+                                    <span class="task-card-title">${titleShort}</span>
+                                    <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                    ${abDone}
+                                    <select class="task-status-select done">${statusOptionsDone}</select>
+                                    <button type="button" class="task-delete-btn" title="Delete">×</button>
+                                `;
                                 div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
                             }
-                            const badge = div.querySelector('.task-status-badge');
-                            if (badge) badge.addEventListener('click', (e) => { e.stopPropagation(); if (entry.type === 'card') { entry.item.status = 'in_progress'; saveCard(entry.card); } else { entry.task.status = 'in_progress'; saveGeneralTask(entry.task); } renderTasksSummary(); });
+                            setupStatusSelect(entry, status, div);
+                            const sel = div.querySelector('.task-status-select');
+                            if (sel) sel.value = status;
                             doneEl.appendChild(div);
                         });
                     } else {
