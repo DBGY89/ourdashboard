@@ -1115,15 +1115,32 @@
             opacity: 0.5;
         }
 
-        /* Roadmap view */
+        /* Roadmap view — horizontal layout: left = project + steps, right = path */
         .roadmap-view {
             padding: 24px;
-            max-width: 720px;
-            margin: 0 auto;
             width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .roadmap-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 28px;
+            align-items: start;
+            flex: 1;
+            min-height: 0;
+        }
+        .roadmap-left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
         }
         .roadmap-project-select-wrap {
-            margin-bottom: 24px;
+            flex-shrink: 0;
         }
         .roadmap-project-select-wrap label {
             display: block;
@@ -1153,38 +1170,52 @@
         .roadmap-section {
             background: rgba(255,255,255,0.04);
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
+            padding: 18px;
             border: 1px solid rgba(255,255,255,0.08);
         }
+        .roadmap-section.steps-section {
+            flex: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
         .roadmap-section h3 {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: rgba(255,255,255,0.9);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+        .roadmap-section .roadmap-hint {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 12px;
+            line-height: 1.4;
         }
         .roadmap-steps-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
         }
         .roadmap-step-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
+            gap: 10px;
+            padding: 10px 12px;
             background: rgba(255,255,255,0.04);
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.08);
         }
         .roadmap-step-row.checked {
-            opacity: 0.85;
+            opacity: 0.9;
         }
         .roadmap-step-row.checked .roadmap-step-text {
             text-decoration: line-through;
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.55);
         }
         .roadmap-step-checkbox {
             width: 22px;
@@ -1221,6 +1252,7 @@
             color: #fff;
             outline: none;
             padding: 4px 0;
+            min-width: 0;
         }
         .roadmap-step-text::placeholder {
             color: rgba(255,255,255,0.35);
@@ -1241,8 +1273,8 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 14px;
-            margin-top: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
             background: transparent;
             border: 1px dashed rgba(255,255,255,0.2);
             border-radius: 8px;
@@ -1250,108 +1282,157 @@
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         .roadmap-add-step:hover {
             border-color: rgba(139, 92, 246, 0.5);
             color: #a78bfa;
         }
-        .roadmap-timeline {
-            position: relative;
-            padding-left: 32px;
-        }
-        .roadmap-timeline::before {
-            content: '';
-            position: absolute;
-            left: 10px;
-            top: 12px;
-            bottom: 12px;
-            width: 3px;
-            background: linear-gradient(to bottom,
-                #10b981 0%,
-                #10b981 var(--progress, 0%),
-                rgba(255,255,255,0.12) var(--progress, 0%),
-                rgba(255,255,255,0.12) 100%);
-            border-radius: 3px;
-            transition: height 0.3s ease;
-        }
-        .roadmap-timeline-node {
-            position: relative;
+        /* Right column: visual path */
+        .roadmap-visual-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 28px 32px;
+            border: 1px solid rgba(255,255,255,0.08);
+            min-height: 280px;
             display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px 0;
-            min-height: 56px;
+            flex-direction: column;
         }
-        .roadmap-timeline-node:first-child {
-            padding-top: 0;
-        }
-        .roadmap-timeline-node:last-child {
-            padding-bottom: 0;
-        }
-        .roadmap-timeline-dot {
-            position: absolute;
-            left: -28px;
-            top: 18px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 3px solid rgba(255,255,255,0.2);
-            background: #1e1e2e;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            color: #fff;
-            transition: all 0.25s ease;
-        }
-        .roadmap-timeline-node.done .roadmap-timeline-dot {
-            background: #10b981;
-            border-color: #10b981;
-        }
-        .roadmap-timeline-node.done .roadmap-timeline-dot::after {
-            content: '✓';
-            font-weight: bold;
-        }
-        .roadmap-timeline-node.current .roadmap-timeline-dot {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.3);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
-        }
-        .roadmap-timeline-content {
-            flex: 1;
-            min-width: 0;
-        }
-        .roadmap-timeline-label {
-            font-size: 12px;
+        .roadmap-visual-section h3 {
+            font-size: 13px;
             font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .roadmap-journey-label {
+            font-size: 13px;
             color: rgba(255,255,255,0.5);
-            margin-bottom: 2px;
-        }
-        .roadmap-timeline-node.done .roadmap-timeline-label {
-            color: rgba(16, 185, 129, 0.9);
-        }
-        .roadmap-timeline-text {
-            font-size: 15px;
-            font-weight: 500;
-            color: #fff;
-            line-height: 1.4;
-        }
-        .roadmap-timeline-node.done .roadmap-timeline-text {
-            color: rgba(255,255,255,0.75);
+            margin-bottom: 20px;
         }
         .roadmap-progress-bar {
-            height: 6px;
+            height: 8px;
             background: rgba(255,255,255,0.1);
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         .roadmap-progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #10b981, #34d399);
-            border-radius: 3px;
+            border-radius: 4px;
             transition: width 0.35s ease;
+        }
+        /* Horizontal path */
+        .roadmap-path {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            position: relative;
+            flex: 1;
+            min-height: 120px;
+        }
+        .roadmap-path-track {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            top: 28px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            z-index: 0;
+        }
+        .roadmap-path-track-done {
+            position: absolute;
+            left: 24px;
+            top: 28px;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 2px;
+            z-index: 1;
+            transition: width 0.4s ease;
+        }
+        .roadmap-path-nodes {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            gap: 8px;
+        }
+        .roadmap-path-node {
+            flex: 1;
+            min-width: 0;
+            max-width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .roadmap-path-node-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            background: #1e1e2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot {
+            background: #10b981;
+            border-color: #10b981;
+            color: #fff;
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot::after {
+            content: '✓';
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot span {
+            display: none;
+        }
+        .roadmap-path-node.current .roadmap-path-node-dot {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.4);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.25);
+        }
+        .roadmap-path-node-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            margin-top: 10px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .roadmap-path-node.done .roadmap-path-node-text {
+            color: rgba(255,255,255,0.65);
+        }
+        .roadmap-path-node-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            color: rgba(255,255,255,0.45);
+        }
+        .roadmap-path-node.done .roadmap-path-node-badge {
+            color: rgba(16, 185, 129, 0.95);
+        }
+        .roadmap-path-node.current .roadmap-path-node-badge {
+            color: #a78bfa;
+        }
+        .roadmap-path-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.45);
+            font-size: 14px;
+            padding: 40px 20px;
+            line-height: 1.5;
         }
 
         /* Pantalla de clave de acceso */
@@ -1704,6 +1785,18 @@
             .roadmap-view {
                 padding: 16px;
             }
+            .roadmap-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .roadmap-left {
+                order: 1;
+            }
+            .roadmap-visual-section {
+                order: 2;
+                padding: 20px 16px;
+                min-height: 220px;
+            }
             .roadmap-project-select {
                 padding: 14px 16px;
                 font-size: 16px;
@@ -1711,6 +1804,9 @@
             }
             .roadmap-section {
                 padding: 14px;
+            }
+            .roadmap-section.steps-section {
+                min-height: 180px;
             }
             .roadmap-step-row {
                 padding: 12px 10px;
@@ -1731,17 +1827,26 @@
                 min-height: 48px;
                 font-size: 15px;
             }
-            .roadmap-timeline {
-                padding-left: 28px;
+            .roadmap-path-nodes {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 16px;
             }
-            .roadmap-timeline-dot {
-                width: 18px;
-                height: 18px;
-                left: -25px;
-                top: 16px;
+            .roadmap-path-node {
+                max-width: 140px;
             }
-            .roadmap-timeline-text {
-                font-size: 14px;
+            .roadmap-path-node-dot {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            .roadmap-path-node-text {
+                font-size: 12px;
+                margin-top: 8px;
+            }
+            .roadmap-path-track,
+            .roadmap-path-track-done {
+                display: none;
             }
 
             /* Access gate on mobile */
@@ -1857,28 +1962,31 @@
 
         <div id="view-roadmap" class="app-view">
             <div class="roadmap-view">
-                <div class="roadmap-project-select-wrap">
-                    <label for="roadmap-project-select">Project</label>
-                    <select id="roadmap-project-select" class="roadmap-project-select">
-                        <option value="">— Select a project —</option>
-                    </select>
-                </div>
                 <div id="roadmap-empty" class="roadmap-empty">
-                    Select a project to view and edit its roadmap.
+                    Select a project to see and edit its roadmap.
                 </div>
-                <div id="roadmap-content" style="display: none;">
-                    <div class="roadmap-section">
-                        <h3>Steps to complete</h3>
-                        <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 12px;">Add steps below. Check them off as you complete; the roadmap updates in real time.</p>
-                        <div id="roadmap-steps-list" class="roadmap-steps-list"></div>
-                        <button type="button" class="roadmap-add-step" id="roadmap-add-step">+ Add step</button>
+                <div id="roadmap-content" class="roadmap-layout" style="display: none;">
+                    <div class="roadmap-left">
+                        <div class="roadmap-project-select-wrap">
+                            <label for="roadmap-project-select">Project</label>
+                            <select id="roadmap-project-select" class="roadmap-project-select">
+                                <option value="">— Select a project —</option>
+                            </select>
+                        </div>
+                        <div class="roadmap-section steps-section">
+                            <h3>Steps to complete</h3>
+                            <p class="roadmap-hint">Define the steps to reach your goal. Check them off as you go — the path on the right updates as you progress.</p>
+                            <div id="roadmap-steps-list" class="roadmap-steps-list"></div>
+                            <button type="button" class="roadmap-add-step" id="roadmap-add-step">+ Add step</button>
+                        </div>
                     </div>
-                    <div class="roadmap-section">
-                        <h3>Roadmap</h3>
+                    <div class="roadmap-visual-section">
+                        <h3>Your path</h3>
+                        <p class="roadmap-journey-label">The road you’re traveling — each step brings you closer.</p>
                         <div id="roadmap-progress-wrap" class="roadmap-progress-bar">
                             <div id="roadmap-progress-fill" class="roadmap-progress-fill" style="width: 0%"></div>
                         </div>
-                        <div id="roadmap-timeline" class="roadmap-timeline"></div>
+                        <div id="roadmap-timeline" class="roadmap-path"></div>
                     </div>
                 </div>
             </div>
@@ -2263,9 +2371,9 @@
 
         function renderRoadmapTimeline() {
             const card = getSelectedRoadmapCard();
-            const timelineEl = document.getElementById('roadmap-timeline');
+            const pathEl = document.getElementById('roadmap-timeline');
             const progressFill = document.getElementById('roadmap-progress-fill');
-            if (!card || !timelineEl) return;
+            if (!card || !pathEl) return;
 
             const steps = getRoadmapSteps(card);
             const doneCount = steps.filter(s => s.checked).length;
@@ -2274,42 +2382,55 @@
 
             if (progressFill) progressFill.style.width = percent + '%';
 
-            timelineEl.style.setProperty('--progress', percent + '%');
-            timelineEl.innerHTML = '';
+            pathEl.innerHTML = '';
 
             if (steps.length === 0) {
                 const empty = document.createElement('div');
-                empty.style.cssText = 'color: rgba(255,255,255,0.45); font-size: 14px; padding: 16px 0;';
-                empty.textContent = 'Add steps above to see the roadmap here.';
-                timelineEl.appendChild(empty);
+                empty.className = 'roadmap-path-empty';
+                empty.textContent = 'Add steps on the left to see your path here. Each step you complete will light up the road.';
+                pathEl.appendChild(empty);
                 return;
             }
 
+            const track = document.createElement('div');
+            track.className = 'roadmap-path-track';
+            pathEl.appendChild(track);
+
+            const trackDone = document.createElement('div');
+            trackDone.className = 'roadmap-path-track-done';
+            trackDone.style.width = percent + '%';
+            pathEl.appendChild(trackDone);
+
+            const nodesWrap = document.createElement('div');
+            nodesWrap.className = 'roadmap-path-nodes';
+
             steps.forEach((step, index) => {
-                const node = document.createElement('div');
                 const isDone = step.checked;
                 const isCurrent = !isDone && steps.slice(0, index).every(s => s.checked);
-                node.className = 'roadmap-timeline-node' + (isDone ? ' done' : '') + (isCurrent ? ' current' : '');
+                const node = document.createElement('div');
+                node.className = 'roadmap-path-node' + (isDone ? ' done' : '') + (isCurrent ? ' current' : '');
 
                 const dot = document.createElement('div');
-                dot.className = 'roadmap-timeline-dot';
-                if (!isDone) dot.textContent = index + 1;
+                dot.className = 'roadmap-path-node-dot';
+                const numSpan = document.createElement('span');
+                numSpan.textContent = index + 1;
+                dot.appendChild(numSpan);
 
-                const content = document.createElement('div');
-                content.className = 'roadmap-timeline-content';
-                const label = document.createElement('div');
-                label.className = 'roadmap-timeline-label';
-                label.textContent = isDone ? 'Done' : (isCurrent ? 'Current' : 'Upcoming');
-                const text = document.createElement('div');
-                text.className = 'roadmap-timeline-text';
-                text.textContent = (step.text || '').trim() || 'Step ' + (index + 1);
+                const textEl = document.createElement('div');
+                textEl.className = 'roadmap-path-node-text';
+                textEl.textContent = (step.text || '').trim() || 'Step ' + (index + 1);
 
-                content.appendChild(label);
-                content.appendChild(text);
+                const badge = document.createElement('div');
+                badge.className = 'roadmap-path-node-badge';
+                badge.textContent = isDone ? 'Done' : (isCurrent ? 'Current' : 'Upcoming');
+
                 node.appendChild(dot);
-                node.appendChild(content);
-                timelineEl.appendChild(node);
+                node.appendChild(textEl);
+                node.appendChild(badge);
+                nodesWrap.appendChild(node);
             });
+
+            pathEl.appendChild(nodesWrap);
         }
 
         function initRoadmap() {
