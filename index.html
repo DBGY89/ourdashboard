@@ -860,30 +860,80 @@
         .task-summary-item:hover {
             background: rgba(255, 255, 255, 0.06);
         }
+        .task-summary-item {
+            align-items: flex-start;
+        }
         .task-summary-item .task-card-title {
             color: rgba(255, 255, 255, 0.5);
             flex-shrink: 0;
-            max-width: 140px;
+            max-width: 120px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-size: 12px;
         }
         .task-summary-item .task-text {
             flex: 1;
             color: #ffffff;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal;
+            word-break: break-word;
+            font-size: 13px;
+            line-height: 1.35;
+            min-width: 0;
         }
         .task-summary-item .task-status-badge {
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 4px;
             flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .task-summary-item .task-status-badge:hover {
+            filter: brightness(1.15);
         }
         .task-summary-item .task-status-badge.todo { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
         .task-summary-item .task-status-badge.in_progress { background: rgba(245,158,11,0.25); color: #fbbf24; }
         .task-summary-item .task-status-badge.done { background: rgba(16,185,129,0.25); color: #34d399; }
+        .tasks-summary-done-section {
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 8px;
+        }
+        .tasks-summary-done-toggle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tasks-summary-done-toggle:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .tasks-summary-done-toggle.expanded .tasks-summary-done-arrow {
+            transform: rotate(180deg);
+        }
+        .tasks-summary-done-list {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .tasks-summary-done-list.visible {
+            display: flex;
+        }
+        .task-summary-item.done-item {
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .task-summary-item.done-item .task-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.85);
+        }
         .tasks-summary-empty {
             color: rgba(255, 255, 255, 0.4);
             font-size: 13px;
@@ -1077,6 +1127,10 @@
                         <input type="text" id="add-task-mildred-input" placeholder="Task description...">
                         <button type="button" id="add-task-mildred-submit">Add</button>
                     </div>
+                    <div class="tasks-summary-done-section">
+                        <button type="button" class="tasks-summary-done-toggle" id="tasks-mildred-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                        <div id="tasks-mildred-done-list" class="tasks-summary-done-list"></div>
+                    </div>
                 </div>
                 <div class="tasks-summary-column">
                     <h3>Diana <button type="button" class="task-summary-add-btn" id="add-task-diana-btn" title="Add general task">+</button></h3>
@@ -1084,6 +1138,10 @@
                     <div class="task-summary-add-form" id="add-form-diana">
                         <input type="text" id="add-task-diana-input" placeholder="Task description...">
                         <button type="button" id="add-task-diana-submit">Add</button>
+                    </div>
+                    <div class="tasks-summary-done-section">
+                        <button type="button" class="tasks-summary-done-toggle" id="tasks-diana-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                        <div id="tasks-diana-done-list" class="tasks-summary-done-list"></div>
                     </div>
                 </div>
             </div>
@@ -1204,10 +1262,12 @@
         const DEFAULT_SCORES = { mercado: 2, dificultadTecnica: 2, tiempoDedicacion: 2, potencialMonetizacion: 2 };
         const ASSIGNEES = ['Mildred', 'Diana'];
         const TASK_STATUSES = [
-            { id: 'todo', label: 'Todo' },
-            { id: 'in_progress', label: 'In progress' },
-            { id: 'done', label: 'Done' },
+            { id: 'todo', label: 'TO DO' },
+            { id: 'in_progress', label: 'IN PROGRESS' },
+            { id: 'done', label: 'DONE' },
         ];
+        const STATUS_LABELS = { todo: 'TO DO', in_progress: 'IN PROGRESS', done: 'DONE' };
+        const STATUS_ORDER = ['todo', 'in_progress', 'done'];
 
         let cards = [];
         let generalTasks = [];
@@ -1402,49 +1462,133 @@
             return { mildred, diana };
         }
 
+        function cycleStatus(current) {
+            const i = STATUS_ORDER.indexOf(current || 'todo');
+            return STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
+        }
+
         function renderTasksSummary() {
             const { mildred, diana } = getTasksByAssignee();
-            const statusLabels = { todo: 'Todo', in_progress: 'In progress', done: 'Done' };
+            const mildredActive = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const mildredDone = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+            const dianaActive = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const dianaDone = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
 
-            function renderColumn(containerId, taskList) {
+            function makeStatusBadge(entry, status, div) {
+                const badge = div.querySelector('.task-status-badge');
+                if (!badge) return;
+                badge.textContent = STATUS_LABELS[status] || status;
+                badge.className = 'task-status-badge ' + (status || 'todo');
+                badge.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const next = cycleStatus(status);
+                    if (entry.type === 'card') {
+                        entry.item.status = next;
+                        saveCard(entry.card);
+                    } else {
+                        entry.task.status = next;
+                        saveGeneralTask(entry.task);
+                    }
+                    renderTasksSummary();
+                });
+            }
+
+            function renderColumn(containerId, doneContainerId, doneToggleId, activeList, doneList) {
                 const el = document.getElementById(containerId);
+                const doneEl = document.getElementById(doneContainerId);
+                const toggleEl = document.getElementById(doneToggleId);
                 if (!el) return;
                 el.innerHTML = '';
-                taskList.forEach(entry => {
+                activeList.forEach(entry => {
                     const div = document.createElement('div');
                     div.className = 'task-summary-item' + (entry.type === 'general' ? ' general' : '');
+                    const status = entry.type === 'card' ? (entry.item.status || 'todo') : (entry.task.status || 'todo');
+                    const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
+                    const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
+                    const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
+                    const titleEsc = (title || '').replace(/"/g, '&quot;');
+                    const textEsc = (text || '').replace(/"/g, '&quot;');
                     if (entry.type === 'card') {
-                        const { card, item, cardId } = entry;
-                        const status = item.status || 'todo';
                         div.innerHTML = `
-                            <span class="task-card-title" title="${(card.title || '').replace(/"/g, '&quot;')}">${(card.title || 'Untitled').substring(0, 20)}${(card.title || '').length > 20 ? '…' : ''}</span>
-                            <span class="task-text" title="${(item.text || '').replace(/"/g, '&quot;')}">${(item.text || '—').substring(0, 35)}${(item.text || '').length > 35 ? '…' : ''}</span>
-                            <span class="task-status-badge ${status}">${statusLabels[status] || status}</span>
+                            <span class="task-card-title" title="${titleEsc}">${titleShort}</span>
+                            <span class="task-text" title="${textEsc}">${text}</span>
+                            <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
                         `;
-                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn')) openModal(cardId); });
+                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-status-badge')) openModal(entry.cardId); });
                     } else {
-                        const { task } = entry;
-                        const status = task.status || 'todo';
                         div.innerHTML = `
                             <span class="task-card-title">General</span>
-                            <span class="task-text" title="${(task.text || '').replace(/"/g, '&quot;')}">${(task.text || '—').substring(0, 35)}${(task.text || '').length > 35 ? '…' : ''}</span>
-                            <span class="task-status-badge ${status}">${statusLabels[status] || status}</span>
+                            <span class="task-text" title="${textEsc}">${text}</span>
+                            <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
                             <button type="button" class="task-delete-btn" title="Delete">×</button>
                         `;
-                        div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(task.id); });
+                        div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
                     }
+                    makeStatusBadge(entry, status, div);
                     el.appendChild(div);
                 });
-                if (taskList.length === 0) {
+                if (activeList.length === 0) {
                     const empty = document.createElement('div');
                     empty.className = 'tasks-summary-empty';
                     empty.textContent = 'No tasks assigned';
                     el.appendChild(empty);
                 }
+
+                if (doneEl && toggleEl) {
+                    const wasExpanded = doneEl.classList.contains('visible');
+                    doneEl.innerHTML = '';
+                    doneEl.classList.remove('visible');
+                    if (doneList.length > 0) {
+                        const arrow = wasExpanded ? '▼' : '▶';
+                        toggleEl.innerHTML = `Done (${doneList.length}) <span class="tasks-summary-done-arrow">${arrow}</span>`;
+                        toggleEl.style.display = 'flex';
+                        if (wasExpanded) {
+                            doneEl.classList.add('visible');
+                            toggleEl.classList.add('expanded');
+                        }
+                        doneList.forEach(entry => {
+                            const div = document.createElement('div');
+                            div.className = 'task-summary-item done-item' + (entry.type === 'general' ? ' general' : '');
+                            const status = entry.type === 'card' ? (entry.item.status || 'done') : (entry.task.status || 'done');
+                            const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
+                            const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
+                            const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
+                            div.innerHTML = `
+                                <span class="task-card-title">${titleShort}</span>
+                                <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                <span class="task-status-badge done">${STATUS_LABELS.done}</span>
+                                ${entry.type === 'general' ? '<button type="button" class="task-delete-btn" title="Delete">×</button>' : ''}
+                            `;
+                            if (entry.type === 'card') {
+                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-status-badge')) openModal(entry.cardId); });
+                            } else {
+                                div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
+                            }
+                            const badge = div.querySelector('.task-status-badge');
+                            if (badge) badge.addEventListener('click', (e) => { e.stopPropagation(); if (entry.type === 'card') { entry.item.status = 'in_progress'; saveCard(entry.card); } else { entry.task.status = 'in_progress'; saveGeneralTask(entry.task); } renderTasksSummary(); });
+                            doneEl.appendChild(div);
+                        });
+                    } else {
+                        toggleEl.style.display = 'none';
+                    }
+                }
             }
 
-            renderColumn('tasks-mildred', mildred);
-            renderColumn('tasks-diana', diana);
+            renderColumn('tasks-mildred', 'tasks-mildred-done-list', 'tasks-mildred-done-toggle', mildredActive, mildredDone);
+            renderColumn('tasks-diana', 'tasks-diana-done-list', 'tasks-diana-done-toggle', dianaActive, dianaDone);
+
+            ['mildred', 'diana'].forEach(name => {
+                const toggle = document.getElementById('tasks-' + name + '-done-toggle');
+                const list = document.getElementById('tasks-' + name + '-done-list');
+                if (toggle && list) {
+                    toggle.onclick = () => {
+                        list.classList.toggle('visible');
+                        toggle.classList.toggle('expanded');
+                        const arrow = toggle.querySelector('.tasks-summary-done-arrow');
+                        if (arrow) arrow.textContent = list.classList.contains('visible') ? '▼' : '▶';
+                    };
+                }
+            });
         }
 
         function setupGeneralTaskAdd(assignee) {
