@@ -1141,6 +1141,7 @@
         }
         .roadmap-project-select-wrap {
             flex-shrink: 0;
+            margin-bottom: 16px;
         }
         .roadmap-project-select-wrap label {
             display: block;
@@ -1962,17 +1963,17 @@
 
         <div id="view-roadmap" class="app-view">
             <div class="roadmap-view">
+                <div class="roadmap-project-select-wrap">
+                    <label for="roadmap-project-select">Project</label>
+                    <select id="roadmap-project-select" class="roadmap-project-select">
+                        <option value="">— Select a project —</option>
+                    </select>
+                </div>
                 <div id="roadmap-empty" class="roadmap-empty">
-                    Select a project to see and edit its roadmap.
+                    Choose a project above to see and edit its roadmap.
                 </div>
                 <div id="roadmap-content" class="roadmap-layout" style="display: none;">
                     <div class="roadmap-left">
-                        <div class="roadmap-project-select-wrap">
-                            <label for="roadmap-project-select">Project</label>
-                            <select id="roadmap-project-select" class="roadmap-project-select">
-                                <option value="">— Select a project —</option>
-                            </select>
-                        </div>
                         <div class="roadmap-section steps-section">
                             <h3>Steps to complete</h3>
                             <p class="roadmap-hint">Define the steps to reach your goal. Check them off as you go — the path on the right updates as you progress.</p>
