@@ -289,6 +289,52 @@
             transform: scaleY(1.3);
         }
 
+        .score-bar-4 {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+            max-width: 120px;
+        }
+        .score-segment {
+            height: 8px;
+            flex: 1;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .score-bar-4.interactive .score-segment {
+            cursor: pointer;
+            height: 12px;
+        }
+        .score-bar-4.interactive .score-segment:hover {
+            transform: scaleY(1.2);
+        }
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .score-row label {
+            min-width: 180px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+        .score-average-row {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .score-average-row .score-average-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 48px;
+        }
+
         /* Modal Styles */
         .modal-backdrop {
             position: fixed;
@@ -852,11 +898,13 @@
                     <select class="select-input" id="modal-column"></select>
                 </div>
 
-                <div class="form-section">
-                    <label>Prioridad</label>
-                    <div class="priority-selector">
-                        <div class="priority-bar interactive" id="modal-priority-bar"></div>
-                        <span class="priority-value" id="modal-priority-value">3/5</span>
+                <div class="form-section" id="modal-scores-section">
+                    <label>Puntuación (1–4)</label>
+                    <div id="modal-scores-rows"></div>
+                    <div class="score-average-row">
+                        <span class="score-average-value" id="modal-score-average">2.0</span>
+                        <span style="color: rgba(255,255,255,0.5); font-size: 13px;">Promedio</span>
+                        <div class="score-bar-4" id="modal-score-average-bar"></div>
                     </div>
                 </div>
 
@@ -930,13 +978,14 @@
             { id: 'done', title: '✅ Completado', color: '#10b981' },
         ];
 
-        const PRIORITY_COLORS = [
-            '#6b7280',
-            '#3b82f6',
-            '#f59e0b',
-            '#f97316',
-            '#ef4444',
+        const SCORE_CRITERIA = [
+            { key: 'mercado', label: '📈 Mercado' },
+            { key: 'dificultadTecnica', label: '⚙️ Dificultad técnica' },
+            { key: 'tiempoDedicacion', label: '⏱ Tiempo de dedicación' },
+            { key: 'potencialMonetizacion', label: '💰 Potencial de monetización' },
         ];
+        const SCORE_BAR_COLORS = ['#6b7280', '#3b82f6', '#8b5cf6', '#10b981'];
+        const DEFAULT_SCORES = { mercado: 2, dificultadTecnica: 2, tiempoDedicacion: 2, potencialMonetizacion: 2 };
 
         let cards = [];
         let selectedCardId = null;
@@ -1052,23 +1101,37 @@
                 });
         }
 
-        function createPriorityBar(priority, interactive = false) {
+        function getScores(card) {
+            if (!card.scores) return { ...DEFAULT_SCORES };
+            return {
+                mercado: card.scores.mercado ?? 2,
+                dificultadTecnica: card.scores.dificultadTecnica ?? 2,
+                tiempoDedicacion: card.scores.tiempoDedicacion ?? 2,
+                potencialMonetizacion: card.scores.potencialMonetizacion ?? 2,
+            };
+        }
+
+        function getScoreAverage(cardOrScores) {
+            const s = cardOrScores && (cardOrScores.mercado != null) ? cardOrScores : getScores(cardOrScores || {});
+            const sum = s.mercado + s.dificultadTecnica + s.tiempoDedicacion + s.potencialMonetizacion;
+            return Math.round((sum / 4) * 10) / 10;
+        }
+
+        function createScoreBar4(value, interactive, onChange) {
             const bar = document.createElement('div');
-            bar.className = 'priority-bar' + (interactive ? ' interactive' : '');
-            
-            for (let i = 1; i <= 5; i++) {
-                const segment = document.createElement('div');
-                segment.className = 'priority-segment';
-                segment.style.backgroundColor = i <= priority ? PRIORITY_COLORS[i - 1] : 'rgba(255, 255, 255, 0.1)';
-                
+            bar.className = 'score-bar-4' + (interactive ? ' interactive' : '');
+            const filled = Math.round(Math.max(0, Math.min(4, value)));
+            for (let i = 1; i <= 4; i++) {
+                const seg = document.createElement('div');
+                seg.className = 'score-segment';
+                seg.style.backgroundColor = i <= filled ? SCORE_BAR_COLORS[i - 1] : 'rgba(255, 255, 255, 0.1)';
                 if (interactive) {
-                    segment.dataset.level = i;
-                    segment.title = `Prioridad ${i}`;
+                    seg.dataset.level = i;
+                    seg.title = `${i}/4`;
+                    seg.addEventListener('click', () => onChange && onChange(i));
                 }
-                
-                bar.appendChild(segment);
+                bar.appendChild(seg);
             }
-            
             return bar;
         }
 
@@ -1111,14 +1174,13 @@
             
             const footer = document.createElement('div');
             footer.className = 'card-footer';
-            
-            footer.appendChild(createPriorityBar(card.priority));
-            
+            const scores = getScores(card);
+            const avg = getScoreAverage(scores);
+            footer.appendChild(createScoreBar4(avg, false));
             const label = document.createElement('span');
             label.className = 'priority-label';
-            label.textContent = `Prioridad: ${card.priority}/5`;
+            label.textContent = avg.toFixed(1);
             footer.appendChild(label);
-            
             cardEl.appendChild(footer);
 
             const stats = getChecklistStats(card);
@@ -1137,7 +1199,11 @@
         function renderColumn(column) {
             const columnCards = cards
                 .filter(c => c.columnId === column.id)
-                .sort((a, b) => b.priority - a.priority);
+                .sort((a, b) => {
+                    const avgA = a.scores ? getScoreAverage(a.scores) : (a.priority != null ? (a.priority / 5) * 4 : 2);
+                    const avgB = b.scores ? getScoreAverage(b.scores) : (b.priority != null ? (b.priority / 5) * 4 : 2);
+                    return avgB - avgA;
+                });
             
             const col = document.createElement('div');
             col.className = 'column';
@@ -1190,7 +1256,7 @@
                 target: '',
                 scope: '',
                 risks: '',
-                priority: 3,
+                scores: { ...DEFAULT_SCORES },
                 checklists: [],
                 createdAt: new Date().toISOString(),
             };
@@ -1198,29 +1264,33 @@
             openModal(newCard.id);
         }
 
-        function updateModalPriorityBar(priority) {
-            const bar = document.getElementById('modal-priority-bar');
-            bar.innerHTML = '';
-            
-            for (let i = 1; i <= 5; i++) {
-                const segment = document.createElement('div');
-                segment.className = 'priority-segment';
-                segment.style.backgroundColor = i <= priority ? PRIORITY_COLORS[i - 1] : 'rgba(255, 255, 255, 0.1)';
-                segment.dataset.level = i;
-                segment.title = `Prioridad ${i}`;
-                
-                segment.addEventListener('click', () => {
-                    const card = cards.find(c => c.id === selectedCardId);
-                    if (card) {
-                        card.priority = i;
-                        saveCard(card);
-                        updateModalPriorityBar(i);
-                        document.getElementById('modal-priority-value').textContent = `${i}/5`;
-                    }
+        function renderModalScores(card) {
+            const cardData = cards.find(c => c.id === selectedCardId) || card;
+            if (!cardData) return;
+            const scores = getScores(cardData);
+            if (!cardData.scores) cardData.scores = { ...scores };
+
+            const rowsEl = document.getElementById('modal-scores-rows');
+            rowsEl.innerHTML = '';
+            SCORE_CRITERIA.forEach(({ key, label }) => {
+                const row = document.createElement('div');
+                row.className = 'score-row';
+                const value = scores[key];
+                const bar = createScoreBar4(value, true, (newVal) => {
+                    cardData.scores[key] = newVal;
+                    saveCard(cardData);
+                    renderModalScores(cardData);
                 });
-                
-                bar.appendChild(segment);
-            }
+                row.innerHTML = `<label>${label}</label>`;
+                row.appendChild(bar);
+                rowsEl.appendChild(row);
+            });
+
+            const avg = getScoreAverage(cardData.scores);
+            document.getElementById('modal-score-average').textContent = avg.toFixed(1);
+            const avgBarEl = document.getElementById('modal-score-average-bar');
+            avgBarEl.innerHTML = '';
+            avgBarEl.appendChild(createScoreBar4(avg, false));
         }
 
         function renderChecklists(card) {
@@ -1348,8 +1418,7 @@
             document.getElementById('modal-target').value = card.target || '';
             document.getElementById('modal-scope').value = card.scope || '';
             document.getElementById('modal-risks').value = card.risks || '';
-            document.getElementById('modal-priority-value').textContent = `${card.priority}/5`;
-            
+
             const columnSelect = document.getElementById('modal-column');
             columnSelect.innerHTML = '';
             COLUMNS.forEach(col => {
@@ -1359,8 +1428,8 @@
                 if (col.id === card.columnId) option.selected = true;
                 columnSelect.appendChild(option);
             });
-            
-            updateModalPriorityBar(card.priority);
+
+            renderModalScores(card);
             renderChecklists(card);
             
             const date = new Date(card.createdAt);
