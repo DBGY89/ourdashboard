@@ -780,6 +780,94 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
+        .item-assignee, .item-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+        }
+        .item-status.status-todo { border-color: rgba(255,255,255,0.2); }
+        .item-status.status-in_progress { border-color: #f59e0b; color: #fbbf24; }
+        .item-status.status-done { border-color: #10b981; color: #34d399; }
+
+        .tasks-summary {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tasks-summary h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .tasks-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .tasks-summary-column {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .tasks-summary-column h3 {
+            font-size: 15px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .task-summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        .task-summary-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .task-summary-item .task-card-title {
+            color: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .task-summary-item .task-text {
+            flex: 1;
+            color: #ffffff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .task-summary-item .task-status-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .task-summary-item .task-status-badge.todo { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+        .task-summary-item .task-status-badge.in_progress { background: rgba(245,158,11,0.25); color: #fbbf24; }
+        .task-summary-item .task-status-badge.done { background: rgba(16,185,129,0.25); color: #34d399; }
+        .tasks-summary-empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
         /* Pantalla de clave de acceso */
         .access-gate {
             position: fixed;
@@ -881,6 +969,20 @@
                 <button type="button" class="logout-btn" id="logout-access-btn" title="Cerrar sesión (pedir clave de nuevo)">Salir</button>
             </div>
         </header>
+
+        <div class="tasks-summary" id="tasks-summary">
+            <h2>Resumen de tareas</h2>
+            <div class="tasks-summary-grid">
+                <div class="tasks-summary-column">
+                    <h3>Mildred</h3>
+                    <div id="tasks-mildred"></div>
+                </div>
+                <div class="tasks-summary-column">
+                    <h3>Diana</h3>
+                    <div id="tasks-diana"></div>
+                </div>
+            </div>
+        </div>
         
         <div class="board" id="board"></div>
     </div>
@@ -986,6 +1088,12 @@
         ];
         const SCORE_BAR_COLORS = ['#6b7280', '#3b82f6', '#8b5cf6', '#10b981'];
         const DEFAULT_SCORES = { mercado: 2, dificultadTecnica: 2, tiempoDedicacion: 2, potencialMonetizacion: 2 };
+        const ASSIGNEES = ['Mildred', 'Diana'];
+        const TASK_STATUSES = [
+            { id: 'todo', label: 'Todo' },
+            { id: 'in_progress', label: 'In progress' },
+            { id: 'done', label: 'Done' },
+        ];
 
         let cards = [];
         let selectedCardId = null;
@@ -1135,6 +1243,59 @@
             return bar;
         }
 
+        function getAllAssignedTasks() {
+            const list = [];
+            cards.forEach(card => {
+                (card.checklists || []).forEach((checklist, cIdx) => {
+                    (checklist.items || []).forEach((item, iIdx) => {
+                        if (item.assignee === 'Mildred' || item.assignee === 'Diana') {
+                            list.push({
+                                card,
+                                cardId: card.id,
+                                checklistIndex: cIdx,
+                                itemIndex: iIdx,
+                                item,
+                                assignee: item.assignee,
+                            });
+                        }
+                    });
+                });
+            });
+            return list;
+        }
+
+        function renderTasksSummary() {
+            const tasks = getAllAssignedTasks();
+            const mildredTasks = tasks.filter(t => t.assignee === 'Mildred');
+            const dianaTasks = tasks.filter(t => t.assignee === 'Diana');
+
+            function renderColumn(containerId, taskList) {
+                const el = document.getElementById(containerId);
+                if (!el) return;
+                el.innerHTML = '';
+                if (taskList.length === 0) {
+                    el.innerHTML = '<div class="tasks-summary-empty">Sin tareas asignadas</div>';
+                    return;
+                }
+                taskList.forEach(({ card, item, cardId }) => {
+                    const status = item.status || 'todo';
+                    const statusLabels = { todo: 'Todo', in_progress: 'In progress', done: 'Done' };
+                    const div = document.createElement('div');
+                    div.className = 'task-summary-item';
+                    div.innerHTML = `
+                        <span class="task-card-title" title="${(card.title || '').replace(/"/g, '&quot;')}">${(card.title || 'Sin título').substring(0, 20)}${(card.title || '').length > 20 ? '…' : ''}</span>
+                        <span class="task-text" title="${(item.text || '').replace(/"/g, '&quot;')}">${(item.text || '—').substring(0, 35)}${(item.text || '').length > 35 ? '…' : ''}</span>
+                        <span class="task-status-badge ${status}">${statusLabels[status] || status}</span>
+                    `;
+                    div.addEventListener('click', () => openModal(cardId));
+                    el.appendChild(div);
+                });
+            }
+
+            renderColumn('tasks-mildred', mildredTasks);
+            renderColumn('tasks-diana', dianaTasks);
+        }
+
         function getChecklistStats(card) {
             if (!card.checklists || card.checklists.length === 0) return null;
             
@@ -1245,6 +1406,7 @@
             COLUMNS.forEach(column => {
                 board.appendChild(renderColumn(column));
             });
+            renderTasksSummary();
         }
 
         function addCard(columnId) {
@@ -1353,6 +1515,9 @@
                 itemsContainer.className = 'checklist-items';
                 
                 items.forEach((item, itemIndex) => {
+                    if (item.assignee === undefined) item.assignee = '';
+                    if (item.status === undefined) item.status = 'todo';
+
                     const itemEl = document.createElement('div');
                     itemEl.className = 'checklist-item' + (item.checked ? ' checked' : '');
                     
@@ -1362,6 +1527,7 @@
                         item.checked = !item.checked;
                         saveCard(currentEditingCard);
                         renderChecklists(currentEditingCard);
+                        renderTasksSummary();
                     });
                     itemEl.appendChild(checkbox);
                     
@@ -1375,6 +1541,44 @@
                         debounceSaveCard();
                     });
                     itemEl.appendChild(textInput);
+
+                    const assigneeSelect = document.createElement('select');
+                    assigneeSelect.className = 'item-assignee';
+                    assigneeSelect.title = 'Asignar a';
+                    const assigneeOpts = ['', ...ASSIGNEES];
+                    assigneeOpts.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name || '— Asignar —';
+                        if (item.assignee === name) opt.selected = true;
+                        assigneeSelect.appendChild(opt);
+                    });
+                    assigneeSelect.addEventListener('change', () => {
+                        item.assignee = assigneeSelect.value || '';
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(assigneeSelect);
+
+                    const statusSelect = document.createElement('select');
+                    statusSelect.className = 'item-status status-' + (item.status || 'todo');
+                    statusSelect.title = 'Estado';
+                    TASK_STATUSES.forEach(({ id, label }) => {
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = label;
+                        if ((item.status || 'todo') === id) opt.selected = true;
+                        statusSelect.appendChild(opt);
+                    });
+                    statusSelect.addEventListener('change', () => {
+                        item.status = statusSelect.value;
+                        statusSelect.className = 'item-status status-' + item.status;
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(statusSelect);
                     
                     const deleteItemBtn = document.createElement('button');
                     deleteItemBtn.className = 'delete-item-btn';
@@ -1383,6 +1587,7 @@
                         checklist.items.splice(itemIndex, 1);
                         saveCard(currentEditingCard);
                         renderChecklists(currentEditingCard);
+                        renderTasksSummary();
                     });
                     itemEl.appendChild(deleteItemBtn);
                     
@@ -1397,7 +1602,13 @@
                 addItemBtn.innerHTML = '+ Añadir item';
                 addItemBtn.addEventListener('click', () => {
                     if (!checklist.items) checklist.items = [];
-                    checklist.items.push({ id: Date.now().toString(), text: '', checked: false });
+                    checklist.items.push({
+                        id: Date.now().toString(),
+                        text: '',
+                        checked: false,
+                        assignee: '',
+                        status: 'todo',
+                    });
                     saveCard(currentEditingCard);
                     renderChecklists(currentEditingCard);
                 });
