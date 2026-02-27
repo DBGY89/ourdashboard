@@ -73,6 +73,44 @@
             align-items: center;
             gap: 12px;
         }
+        .main-nav {
+            display: flex;
+            gap: 4px;
+            padding: 0 24px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .main-nav-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .main-nav-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .main-nav-btn.active {
+            color: #a78bfa;
+            background: rgba(139, 92, 246, 0.2);
+        }
+        .app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .app-view.active {
+            display: flex;
+        }
+        #view-tasks {
+            overflow-y: auto;
+        }
 
         .auth-info {
             display: flex;
@@ -830,7 +868,7 @@
         }
         .tasks-summary-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
         }
         .tasks-summary-column {
@@ -895,6 +933,19 @@
         .task-summary-item .task-status-badge.todo { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
         .task-summary-item .task-status-badge.in_progress { background: rgba(245,158,11,0.25); color: #fbbf24; }
         .task-summary-item .task-status-badge.done { background: rgba(16,185,129,0.25); color: #34d399; }
+        .task-summary-item .task-assignee-badge {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .task-summary-item .task-assignee-badge.m { background: rgba(236, 72, 153, 0.35); color: #f472b6; }
+        .task-summary-item .task-assignee-badge.d { background: rgba(59, 130, 246, 0.35); color: #60a5fa; }
         .tasks-summary-done-section {
             margin-top: 10px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -1117,37 +1168,54 @@
             </div>
         </header>
 
-        <div class="tasks-summary" id="tasks-summary">
-            <h2>Task summary</h2>
-            <div class="tasks-summary-grid">
-                <div class="tasks-summary-column">
-                    <h3>Mildred <button type="button" class="task-summary-add-btn" id="add-task-mildred-btn" title="Add general task">+</button></h3>
-                    <div id="tasks-mildred"></div>
-                    <div class="task-summary-add-form" id="add-form-mildred">
-                        <input type="text" id="add-task-mildred-input" placeholder="Task description...">
-                        <button type="button" id="add-task-mildred-submit">Add</button>
+        <nav class="main-nav">
+            <button type="button" class="main-nav-btn active" id="nav-projects" data-view="projects">Projects</button>
+            <button type="button" class="main-nav-btn" id="nav-tasks" data-view="tasks">Tasks</button>
+        </nav>
+
+        <div id="view-projects" class="app-view active">
+            <div class="board" id="board"></div>
+        </div>
+
+        <div id="view-tasks" class="app-view">
+            <div class="tasks-summary" id="tasks-summary">
+                <h2>Task summary</h2>
+                <div class="tasks-summary-grid">
+                    <div class="tasks-summary-column">
+                        <h3>Team</h3>
+                        <div id="tasks-team"></div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-team-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-team-done-list" class="tasks-summary-done-list"></div>
+                        </div>
                     </div>
-                    <div class="tasks-summary-done-section">
-                        <button type="button" class="tasks-summary-done-toggle" id="tasks-mildred-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
-                        <div id="tasks-mildred-done-list" class="tasks-summary-done-list"></div>
+                    <div class="tasks-summary-column">
+                        <h3>Mildred <button type="button" class="task-summary-add-btn" id="add-task-mildred-btn" title="Add personal task">+</button></h3>
+                        <div id="tasks-mildred"></div>
+                        <div class="task-summary-add-form" id="add-form-mildred">
+                            <input type="text" id="add-task-mildred-input" placeholder="Task description...">
+                            <button type="button" id="add-task-mildred-submit">Add</button>
+                        </div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-mildred-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-mildred-done-list" class="tasks-summary-done-list"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="tasks-summary-column">
-                    <h3>Diana <button type="button" class="task-summary-add-btn" id="add-task-diana-btn" title="Add general task">+</button></h3>
-                    <div id="tasks-diana"></div>
-                    <div class="task-summary-add-form" id="add-form-diana">
-                        <input type="text" id="add-task-diana-input" placeholder="Task description...">
-                        <button type="button" id="add-task-diana-submit">Add</button>
-                    </div>
-                    <div class="tasks-summary-done-section">
-                        <button type="button" class="tasks-summary-done-toggle" id="tasks-diana-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
-                        <div id="tasks-diana-done-list" class="tasks-summary-done-list"></div>
+                    <div class="tasks-summary-column">
+                        <h3>Diana <button type="button" class="task-summary-add-btn" id="add-task-diana-btn" title="Add personal task">+</button></h3>
+                        <div id="tasks-diana"></div>
+                        <div class="task-summary-add-form" id="add-form-diana">
+                            <input type="text" id="add-task-diana-input" placeholder="Task description...">
+                            <button type="button" id="add-task-diana-submit">Add</button>
+                        </div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-diana-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-diana-done-list" class="tasks-summary-done-list"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="board" id="board"></div>
     </div>
 
     <div class="modal-backdrop hidden" id="modal-backdrop">
@@ -1326,12 +1394,35 @@
             });
         }
 
+        function initMainNav() {
+            const btnProjects = document.getElementById('nav-projects');
+            const btnTasks = document.getElementById('nav-tasks');
+            const viewProjects = document.getElementById('view-projects');
+            const viewTasks = document.getElementById('view-tasks');
+            if (!btnProjects || !btnTasks || !viewProjects || !viewTasks) return;
+            function showProjects() {
+                btnProjects.classList.add('active');
+                btnTasks.classList.remove('active');
+                viewProjects.classList.add('active');
+                viewTasks.classList.remove('active');
+            }
+            function showTasks() {
+                btnTasks.classList.add('active');
+                btnProjects.classList.remove('active');
+                viewTasks.classList.add('active');
+                viewProjects.classList.remove('active');
+            }
+            btnProjects.addEventListener('click', showProjects);
+            btnTasks.addEventListener('click', showTasks);
+        }
+
         function checkAccessAndShowApp() {
             if (sessionStorage.getItem(ACCESS_STORAGE_KEY) === 'ok') {
                 document.getElementById('access-gate').classList.add('hidden');
                 document.getElementById('app-main').style.display = 'flex';
                 document.getElementById('app-main').style.flexDirection = 'column';
                 showLoading('Loading...');
+                initMainNav();
                 initCardsListener();
             }
         }
@@ -1348,6 +1439,7 @@
                 document.getElementById('app-main').style.display = 'flex';
                 document.getElementById('app-main').style.flexDirection = 'column';
                 showLoading('Loading...');
+                initMainNav();
                 initCardsListener();
             } else {
                 errorEl.textContent = 'Incorrect key. Try again.';
@@ -1444,17 +1536,23 @@
             return bar;
         }
 
-        function getTasksByAssignee() {
-            const mildred = [];
-            const diana = [];
+        function getTeamTasks() {
+            const list = [];
             cards.forEach(card => {
                 (card.checklists || []).forEach((checklist) => {
                     (checklist.items || []).forEach((item) => {
-                        if (item.assignee === 'Mildred') mildred.push({ type: 'card', card, item, cardId: card.id });
-                        if (item.assignee === 'Diana') diana.push({ type: 'card', card, item, cardId: card.id });
+                        if (item.assignee === 'Mildred' || item.assignee === 'Diana') {
+                            list.push({ type: 'card', card, item, cardId: card.id });
+                        }
                     });
                 });
             });
+            return list;
+        }
+
+        function getTasksByAssignee() {
+            const mildred = [];
+            const diana = [];
             (generalTasks || []).forEach(task => {
                 if (task.assignee === 'Mildred') mildred.push({ type: 'general', task });
                 if (task.assignee === 'Diana') diana.push({ type: 'general', task });
@@ -1468,11 +1566,14 @@
         }
 
         function renderTasksSummary() {
+            const teamList = getTeamTasks();
+            const teamActive = teamList.filter(e => (e.item.status || 'todo') !== 'done');
+            const teamDone = teamList.filter(e => (e.item.status || 'todo') === 'done');
             const { mildred, diana } = getTasksByAssignee();
-            const mildredActive = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
-            const mildredDone = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
-            const dianaActive = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
-            const dianaDone = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+            const mildredActive = mildred.filter(e => (e.task.status || 'todo') !== 'done');
+            const mildredDone = mildred.filter(e => (e.task.status || 'todo') === 'done');
+            const dianaActive = diana.filter(e => (e.task.status || 'todo') !== 'done');
+            const dianaDone = diana.filter(e => (e.task.status || 'todo') === 'done');
 
             function makeStatusBadge(entry, status, div) {
                 const badge = div.querySelector('.task-status-badge');
@@ -1493,7 +1594,14 @@
                 });
             }
 
-            function renderColumn(containerId, doneContainerId, doneToggleId, activeList, doneList) {
+            function assigneeBadge(entry) {
+                if (entry.type !== 'card' || !entry.item.assignee) return '';
+                const c = entry.item.assignee === 'Mildred' ? 'm' : 'd';
+                const l = entry.item.assignee === 'Mildred' ? 'M' : 'D';
+                return `<span class="task-assignee-badge ${c}">${l}</span>`;
+            }
+
+            function renderColumn(containerId, doneContainerId, doneToggleId, activeList, doneList, showAssigneeBadge) {
                 const el = document.getElementById(containerId);
                 const doneEl = document.getElementById(doneContainerId);
                 const toggleEl = document.getElementById(doneToggleId);
@@ -1508,13 +1616,15 @@
                     const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
                     const titleEsc = (title || '').replace(/"/g, '&quot;');
                     const textEsc = (text || '').replace(/"/g, '&quot;');
+                    const ab = showAssigneeBadge ? assigneeBadge(entry) : '';
                     if (entry.type === 'card') {
                         div.innerHTML = `
                             <span class="task-card-title" title="${titleEsc}">${titleShort}</span>
                             <span class="task-text" title="${textEsc}">${text}</span>
+                            ${ab}
                             <span class="task-status-badge ${status}">${STATUS_LABELS[status] || status}</span>
                         `;
-                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-status-badge')) openModal(entry.cardId); });
+                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-status-badge') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
                     } else {
                         div.innerHTML = `
                             <span class="task-card-title">General</span>
@@ -1549,18 +1659,19 @@
                         doneList.forEach(entry => {
                             const div = document.createElement('div');
                             div.className = 'task-summary-item done-item' + (entry.type === 'general' ? ' general' : '');
-                            const status = entry.type === 'card' ? (entry.item.status || 'done') : (entry.task.status || 'done');
                             const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
                             const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
                             const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
+                            const abDone = showAssigneeBadge ? assigneeBadge(entry) : '';
                             div.innerHTML = `
                                 <span class="task-card-title">${titleShort}</span>
                                 <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                ${abDone}
                                 <span class="task-status-badge done">${STATUS_LABELS.done}</span>
                                 ${entry.type === 'general' ? '<button type="button" class="task-delete-btn" title="Delete">×</button>' : ''}
                             `;
                             if (entry.type === 'card') {
-                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-status-badge')) openModal(entry.cardId); });
+                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-status-badge') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
                             } else {
                                 div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
                             }
@@ -1574,10 +1685,11 @@
                 }
             }
 
-            renderColumn('tasks-mildred', 'tasks-mildred-done-list', 'tasks-mildred-done-toggle', mildredActive, mildredDone);
-            renderColumn('tasks-diana', 'tasks-diana-done-list', 'tasks-diana-done-toggle', dianaActive, dianaDone);
+            renderColumn('tasks-team', 'tasks-team-done-list', 'tasks-team-done-toggle', teamActive, teamDone, true);
+            renderColumn('tasks-mildred', 'tasks-mildred-done-list', 'tasks-mildred-done-toggle', mildredActive, mildredDone, false);
+            renderColumn('tasks-diana', 'tasks-diana-done-list', 'tasks-diana-done-toggle', dianaActive, dianaDone, false);
 
-            ['mildred', 'diana'].forEach(name => {
+            ['team', 'mildred', 'diana'].forEach(name => {
                 const toggle = document.getElementById('tasks-' + name + '-done-toggle');
                 const list = document.getElementById('tasks-' + name + '-done-list');
                 if (toggle && list) {
