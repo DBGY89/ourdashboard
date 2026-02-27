@@ -733,28 +733,106 @@
             border-color: rgba(255, 255, 255, 0.25);
             color: rgba(255, 255, 255, 0.6);
         }
+
+        /* Pantalla de clave de acceso */
+        .access-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 24px;
+        }
+        .access-gate.hidden {
+            display: none;
+        }
+        .access-gate h1 {
+            font-size: 28px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        .access-gate p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .access-gate form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .access-gate input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 16px;
+            color: #ffffff;
+            outline: none;
+        }
+        .access-gate input:focus {
+            border-color: #8b5cf6;
+        }
+        .access-gate input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .access-gate button {
+            background: #8b5cf6;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .access-gate button:hover {
+            background: #7c3aed;
+        }
+        .access-gate .error {
+            color: #ef4444;
+            font-size: 13px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <div class="access-gate" id="access-gate">
+        <h1>🎯 Incubadora de Ideas</h1>
+        <p>Introduce la clave de acceso para continuar</p>
+        <form id="access-form">
+            <input type="password" id="access-key-input" placeholder="Clave de acceso" autocomplete="off">
+            <button type="submit">Entrar</button>
+            <p class="error" id="access-error"></p>
+        </form>
+    </div>
+
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
         <p class="loading-text">Conectando con Firebase...</p>
     </div>
 
-    <div class="app">
+    <div class="app" id="app-main" style="display: none;">
         <header class="header">
             <div class="header-left">
                 <h1>🎯 Incubadora de Ideas</h1>
                 <p class="subtitle">Organiza y prioriza tus proyectos</p>
             </div>
             <div class="header-right">
-                <div class="auth-info" id="auth-info">
-                    <button class="login-btn" id="login-btn-initial">Entrar con Google</button>
-                </div>
                 <div class="sync-status">
                     <div class="sync-dot" id="sync-dot"></div>
                     <span id="sync-text">Sin conexión</span>
                 </div>
+                <button type="button" class="logout-btn" id="logout-access-btn" title="Cerrar sesión (pedir clave de nuevo)">Salir</button>
             </div>
         </header>
         
@@ -820,25 +898,27 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
     <script>
+        // Clave de acceso (cámbiala y compártela solo con quien debe entrar)
+        const ACCESS_KEY = 'incubadora2025';
+        const ACCESS_STORAGE_KEY = 'incubadora_access';
+
         // Firebase Configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyCYzLRS1shHpf4t4fDS_BkXLGKcyvXrbbQ",
-  authDomain: "dashboard-1cec5.firebaseapp.com",
-  databaseURL: "https://dashboard-1cec5-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "dashboard-1cec5",
-  storageBucket: "dashboard-1cec5.firebasestorage.app",
-  messagingSenderId: "449959469735",
-  appId: "1:449959469735:web:bf1096143a2d316d777182",
-  measurementId: "G-PXHECZSBTD"
-};
+            apiKey: "AIzaSyCYzLRS1shHpf4t4fDS_BkXLGKcyvXrbbQ",
+            authDomain: "dashboard-1cec5.firebaseapp.com",
+            databaseURL: "https://dashboard-1cec5-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "dashboard-1cec5",
+            storageBucket: "dashboard-1cec5.firebasestorage.app",
+            messagingSenderId: "449959469735",
+            appId: "1:449959469735:web:bf1096143a2d316d777182",
+            measurementId: "G-PXHECZSBTD"
+        };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const database = firebase.database();
         const cardsRef = database.ref('cards');
 
@@ -907,6 +987,41 @@
                 hideLoading();
             });
         }
+
+        function checkAccessAndShowApp() {
+            if (sessionStorage.getItem(ACCESS_STORAGE_KEY) === 'ok') {
+                document.getElementById('access-gate').classList.add('hidden');
+                document.getElementById('app-main').style.display = 'flex';
+                document.getElementById('app-main').style.flexDirection = 'column';
+                showLoading('Cargando...');
+                initCardsListener();
+            }
+        }
+
+        document.getElementById('access-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('access-key-input');
+            const errorEl = document.getElementById('access-error');
+            const value = (input.value || '').trim();
+            if (value === ACCESS_KEY) {
+                errorEl.textContent = '';
+                sessionStorage.setItem(ACCESS_STORAGE_KEY, 'ok');
+                document.getElementById('access-gate').classList.add('hidden');
+                document.getElementById('app-main').style.display = 'flex';
+                document.getElementById('app-main').style.flexDirection = 'column';
+                showLoading('Cargando...');
+                initCardsListener();
+            } else {
+                errorEl.textContent = 'Clave incorrecta. Intenta de nuevo.';
+            }
+        });
+
+        checkAccessAndShowApp();
+
+        document.getElementById('logout-access-btn').addEventListener('click', function() {
+            sessionStorage.removeItem(ACCESS_STORAGE_KEY);
+            location.reload();
+        });
 
         // Monitor connection state
         database.ref('.info/connected').on('value', (snapshot) => {
@@ -1328,64 +1443,6 @@
         });
 
         document.getElementById('modal-column').addEventListener('change', updateCard);
-
-        // --- Auth with Google ---
-        function renderAuthUI(user) {
-            const authInfo = document.getElementById('auth-info');
-            if (!authInfo) return;
-
-            if (!user) {
-                authInfo.innerHTML = `
-                    <button class="login-btn" id="login-btn">Entrar con Google</button>
-                `;
-                const loginBtn = document.getElementById('login-btn');
-                if (loginBtn) {
-                    loginBtn.addEventListener('click', loginWithGoogle);
-                }
-                document.getElementById('board').innerHTML = '';
-                updateSyncStatus('offline');
-                hideLoading();
-                return;
-            }
-
-            const email = user.email || '';
-            authInfo.innerHTML = `
-                <span class="user-email" title="${email}">${email}</span>
-                <button class="logout-btn" id="logout-btn">Salir</button>
-            `;
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', () => auth.signOut());
-            }
-        }
-
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            showLoading('Autenticando...');
-            auth.signInWithPopup(provider)
-                .catch((error) => {
-                    console.error('Error de login:', error);
-                    hideLoading();
-                    alert('No se pudo iniciar sesión. Intenta de nuevo.');
-                });
-        }
-
-        auth.onAuthStateChanged((user) => {
-            renderAuthUI(user);
-            if (user) {
-                showLoading('Cargando tus ideas...');
-                initCardsListener();
-            } else {
-                cards = [];
-                renderBoard();
-            }
-        });
-
-        // Soporte por si el botón inicial se carga antes del JS
-        const initialLoginBtn = document.getElementById('login-btn-initial');
-        if (initialLoginBtn) {
-            initialLoginBtn.addEventListener('click', loginWithGoogle);
-        }
     </script>
 </body>
 </html>
