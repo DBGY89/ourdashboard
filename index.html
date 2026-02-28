@@ -1505,6 +1505,19 @@
             font-size: 13px;
             text-align: center;
         }
+        .access-gate .access-gate-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .access-gate #auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
 
         /* ========== Mobile / responsive ========== */
         @media (max-width: 768px) {
@@ -1923,11 +1936,13 @@
 <body>
     <div class="access-gate" id="access-gate">
         <h1>🎯 Incubadora de Ideas</h1>
-        <p>Enter access key to continue</p>
-        <form id="access-form">
-            <input type="password" id="access-key-input" placeholder="Access key" autocomplete="off">
-            <button type="submit">Enter</button>
-            <p class="error" id="access-error"></p>
+        <p>Log in with your account</p>
+        <p class="access-gate-hint">Access is restricted. Only pre-registered accounts can sign in.</p>
+        <form id="auth-form">
+            <input type="email" id="auth-email" placeholder="Email" autocomplete="email" required>
+            <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" required>
+            <button type="submit" id="auth-submit">Log in</button>
+            <p class="error" id="auth-error"></p>
         </form>
     </div>
 
@@ -1947,7 +1962,7 @@
                     <div class="sync-dot" id="sync-dot"></div>
                     <span id="sync-text">Offline</span>
                 </div>
-                <button type="button" class="logout-btn" id="logout-access-btn" title="Log out (require key again)">Log out</button>
+                <button type="button" class="logout-btn" id="logout-access-btn" title="Log out">Log out</button>
             </div>
         </header>
 
@@ -2119,13 +2134,10 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 
     <script>
-        // Clave de acceso (cámbiala y compártela solo con quien debe entrar)
-        const ACCESS_KEY = 'incubadora2025';
-        const ACCESS_STORAGE_KEY = 'incubadora_access';
-
         // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCYzLRS1shHpf4t4fDS_BkXLGKcyvXrbbQ",
@@ -2141,6 +2153,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
         const cardsRef = database.ref('cards');
         const generalTasksRef = database.ref('generalTasks');
 
@@ -2472,41 +2485,61 @@
             }
         }
 
-        function checkAccessAndShowApp() {
-            if (sessionStorage.getItem(ACCESS_STORAGE_KEY) === 'ok') {
-                document.getElementById('access-gate').classList.add('hidden');
-                document.getElementById('app-main').style.display = 'flex';
-                document.getElementById('app-main').style.flexDirection = 'column';
-                showLoading('Loading...');
-                initMainNav();
-                initCardsListener();
-            }
+        function showApp() {
+            document.getElementById('access-gate').classList.add('hidden');
+            document.getElementById('app-main').style.display = 'flex';
+            document.getElementById('app-main').style.flexDirection = 'column';
+            showLoading('Loading...');
+            initMainNav();
+            initCardsListener();
         }
 
-        document.getElementById('access-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const input = document.getElementById('access-key-input');
-            const errorEl = document.getElementById('access-error');
-            const value = (input.value || '').trim();
-            if (value === ACCESS_KEY) {
-                errorEl.textContent = '';
-                sessionStorage.setItem(ACCESS_STORAGE_KEY, 'ok');
-                document.getElementById('access-gate').classList.add('hidden');
-                document.getElementById('app-main').style.display = 'flex';
-                document.getElementById('app-main').style.flexDirection = 'column';
-                showLoading('Loading...');
-                initMainNav();
-                initCardsListener();
+        function showLogin() {
+            document.getElementById('access-gate').classList.remove('hidden');
+            document.getElementById('app-main').style.display = 'none';
+            document.getElementById('auth-error').textContent = '';
+            hideLoading();
+        }
+
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                showApp();
             } else {
-                errorEl.textContent = 'Incorrect key. Try again.';
+                showLogin();
             }
         });
 
-        checkAccessAndShowApp();
+        document.getElementById('auth-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = (document.getElementById('auth-email').value || '').trim();
+            const password = document.getElementById('auth-password').value || '';
+            const errorEl = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-submit');
+            if (!email || !password) {
+                errorEl.textContent = 'Enter email and password.';
+                return;
+            }
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+            auth.signInWithEmailAndPassword(email, password)
+                .then(function() {
+                    errorEl.textContent = '';
+                })
+                .catch(function(err) {
+                    if (err.code === 'auth/user-not-found') errorEl.textContent = 'No account with this email.';
+                    else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') errorEl.textContent = 'Wrong password.';
+                    else if (err.code === 'auth/invalid-email') errorEl.textContent = 'Invalid email.';
+                    else errorEl.textContent = err.message || 'Login failed. Try again.';
+                })
+                .finally(function() {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Log in';
+                });
+        });
 
         document.getElementById('logout-access-btn').addEventListener('click', function() {
-            sessionStorage.removeItem(ACCESS_STORAGE_KEY);
-            location.reload();
+            auth.signOut();
         });
 
         // Monitor connection state
