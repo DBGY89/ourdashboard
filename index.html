@@ -111,9 +111,15 @@
         .app-view.active {
             display: flex;
         }
-        #view-tasks {
-            overflow-y: auto;
-        }
+            #view-tasks {
+                overflow-y: auto;
+                overflow-x: hidden;
+                min-width: 0;
+            }
+            .tasks-summary {
+                min-width: 0;
+                overflow-x: hidden;
+            }
 
         .auth-info {
             display: flex;
@@ -1647,12 +1653,24 @@
                 font-size: 22px;
                 flex-shrink: 0;
             }
+            .modal {
+                overflow-x: hidden;
+            }
             .modal-body {
                 padding: 16px;
                 gap: 14px;
+                overflow-x: hidden;
+                max-width: 100%;
+            }
+            .form-section {
+                min-width: 0;
+                overflow: hidden;
             }
             .form-section label {
                 font-size: 11px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
             }
             .form-section textarea,
             .form-section input[type="text"],
@@ -1660,6 +1678,8 @@
                 padding: 14px 16px;
                 font-size: 16px;
                 min-height: 48px;
+                max-width: 100%;
+                box-sizing: border-box;
             }
             .form-section textarea {
                 min-height: 80px;
@@ -1679,6 +1699,8 @@
             }
             .modal-footer {
                 padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
             }
             .delete-btn {
                 padding: 12px 16px;
@@ -1688,29 +1710,48 @@
             /* Checklists in modal */
             .checklist {
                 padding: 12px;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .checklist-header {
+                flex-wrap: wrap;
+                gap: 8px;
             }
             .checklist-title-input {
                 font-size: 14px;
+                min-width: 0;
+                flex: 1;
+            }
+            .checklist-item {
+                flex-wrap: wrap;
+                min-width: 0;
             }
             .item-checkbox {
                 width: 24px;
                 height: 24px;
                 min-width: 24px;
                 min-height: 24px;
+                flex-shrink: 0;
             }
             .item-text {
                 font-size: 15px;
                 min-height: 24px;
+                min-width: 0;
+                flex: 1;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            .checklist-item .item-assignee,
+            .checklist-item .item-status {
+                padding: 8px 10px;
+                font-size: 12px;
+                min-height: 40px;
+                flex-shrink: 0;
             }
             .add-item-btn {
                 padding: 12px;
                 font-size: 14px;
                 min-height: 44px;
-            }
-            .item-assignee, .item-status {
-                padding: 8px 10px;
-                font-size: 12px;
-                min-height: 40px;
             }
             .add-checklist-btn {
                 padding: 10px 14px;
@@ -1732,6 +1773,8 @@
             }
             .tasks-summary-column {
                 padding: 12px;
+                min-width: 0;
+                overflow: hidden;
             }
             .tasks-summary-column h3 {
                 font-size: 14px;
@@ -1742,19 +1785,35 @@
                 font-size: 13px;
                 gap: 8px;
                 flex-wrap: wrap;
+                align-items: flex-start;
+                min-width: 0;
+                overflow: hidden;
             }
             .task-summary-item .task-card-title {
-                max-width: 100%;
-                font-size: 11px;
+                max-width: calc(100% - 80px);
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
             .task-summary-item .task-text {
                 font-size: 13px;
+                width: 100%;
+                flex: 1 1 100%;
+                min-width: 0;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
             }
             .task-summary-item .task-status-select {
-                min-width: 100px;
+                min-width: 105px;
                 padding: 8px 10px;
-                font-size: 12px;
+                font-size: 11px;
                 min-height: 40px;
+                flex-shrink: 0;
+            }
+            .task-summary-item .task-assignee-badge {
+                flex-shrink: 0;
             }
             .task-summary-add-btn {
                 width: 32px;
