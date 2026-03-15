@@ -660,6 +660,133 @@
             border-color: rgba(139, 92, 246, 0.6);
         }
 
+        .checklist-import-area {
+            margin-bottom: 12px;
+        }
+        .checklist-import-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.2);
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 8px;
+        }
+        .checklist-import-textarea::placeholder {
+            color: rgba(255,255,255,0.35);
+        }
+        .checklist-import-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .checklist-import-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: none;
+            background: #8b5cf6;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .checklist-import-btn:hover {
+            background: #7c3aed;
+        }
+        .checklist-import-cancel {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .checklist-import-hint {
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 4px;
+        }
+        .checklist-import-tab {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .checklist-import-tab:hover { background: rgba(255,255,255,0.1); }
+        .checklist-import-tab.active { background: rgba(139,92,246,0.3); border-color: #8b5cf6; color: #fff; }
+        .checklist-stage {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .checklist-stage-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .checklist-stage-header:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .checklist-stage-arrow {
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .checklist-stage.expanded .checklist-stage-arrow {
+            transform: rotate(90deg);
+        }
+        .checklist-stage-title-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .checklist-stage-title-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 4px 0;
+            outline: none;
+            min-width: 0;
+        }
+        .checklist-stage-title-input:hover,
+        .checklist-stage-title-input:focus {
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+        }
+        .checklist-stage-header .progress-text {
+            margin: 0;
+        }
+        .checklist-stage-body {
+            padding: 0 14px 14px 14px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .checklist-stage.collapsed .checklist-stage-body {
+            display: none;
+        }
+        .checklist-stage .delete-checklist-btn {
+            flex-shrink: 0;
+        }
+
         .checklist {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2177,8 +2304,29 @@
 
                 <div class="checklists-section">
                     <div class="checklists-header">
-                        <label>Checklists</label>
-                        <button class="add-checklist-btn" id="add-checklist-btn">+ Add checklist</button>
+                        <label>Checklist por etapas</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button type="button" class="add-checklist-btn" id="checklist-import-toggle">Importar desde documento</button>
+                            <button type="button" class="add-checklist-btn" id="add-checklist-btn">+ Añadir etapa</button>
+                        </div>
+                    </div>
+                    <div class="checklist-import-area" id="checklist-import-area" style="display: none;">
+                        <div class="checklist-import-tabs" style="display:flex; gap:8px; margin-bottom:8px;">
+                            <button type="button" class="checklist-import-tab active" data-tab="paste">Pegar texto</button>
+                            <button type="button" class="checklist-import-tab" data-tab="pdf">Subir PDF</button>
+                        </div>
+                        <div id="checklist-import-paste" class="checklist-import-panel">
+                            <textarea id="checklist-import-textarea" class="checklist-import-textarea" placeholder="Pega aquí el documento. Usa «Fase 1 — Título» o ## para etapas; el resto son tareas."></textarea>
+                            <p class="checklist-import-hint">También puedes pegar el texto copiado desde un PDF (roadmap, listas, etc.).</p>
+                        </div>
+                        <div id="checklist-import-pdf" class="checklist-import-panel" style="display:none;">
+                            <input type="file" id="checklist-pdf-input" accept=".pdf" style="margin-bottom:8px;">
+                            <p class="checklist-import-hint" id="checklist-pdf-status">Elige un PDF (ej. roadmap). Se extraerá el texto y se convertirán las fases en etapas.</p>
+                        </div>
+                        <div class="checklist-import-actions">
+                            <button type="button" class="checklist-import-btn" id="checklist-import-apply">Importar</button>
+                            <button type="button" class="checklist-import-cancel" id="checklist-import-cancel">Cancelar</button>
+                        </div>
                     </div>
                     <div id="checklists-container"></div>
                 </div>
@@ -2195,6 +2343,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script>
         // Firebase Configuration
@@ -3154,72 +3303,128 @@
             avgBarEl.appendChild(createScoreBar4(avg, false));
         }
 
+        function parseImportDocument(text) {
+            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const stages = [];
+            let current = null;
+            // Etapas: ## Título | Fase 1 — Título | Etapa 1: Título | *** Título *** | --- Título ---
+            const stageHeaderRe = /^#+\s*(.+)$|^(?:Etapa|Fase)\s*\d*\s*[.:—\-]\s*(.*)$|^\*\*\*\s*(.+)$|^---\s*(.+?)\s*---?$/i;
+            const taskPrefixRe = /^(?:Sem\.?\s*\d+(?:[-\s]*\d+)?|Mes\s*\d+(?:[-\s]*\d+)?|Recur\.?)\s+/i;
+            const tableHeaderRe = /^SEMANA\s+PRIORIDAD\s+TAREA$/i;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const m = line.match(stageHeaderRe);
+                const titlePart = m ? (m[1] || m[2] || m[3] || m[4] || '').trim() : '';
+                if (m && titlePart) {
+                    if (current && (current.items.length > 0 || stages.length > 0)) stages.push({ title: current.title, items: [...current.items] });
+                    current = { title: titlePart || 'Nueva etapa', items: [] };
+                } else if (tableHeaderRe.test(line)) {
+                    continue;
+                } else {
+                    if (!current) current = { title: 'Etapa 1', items: [] };
+                    var taskText = line;
+                    if (taskPrefixRe.test(line)) taskText = line.replace(taskPrefixRe, '').replace(/^\s*(urgente|importante|critico|normal|planificar|recurrente)\s+/i, '').trim();
+                    const nextLine = lines[i + 1];
+                    if (nextLine && !nextLine.match(stageHeaderRe) && !tableHeaderRe.test(nextLine) && !taskPrefixRe.test(nextLine)) {
+                        taskText = taskText + ' — ' + nextLine;
+                        i++;
+                    }
+                    if (taskText) current.items.push({ text: taskText });
+                }
+            }
+            if (current && (current.items.length > 0 || stages.length === 0)) stages.push({ title: current.title, items: current.items });
+            return stages.length ? stages : [{ title: 'Etapa 1', items: [] }];
+        }
+
+        function applyImportToCard(card, parsedStages) {
+            if (!card.checklists) card.checklists = [];
+            card.checklists = parsedStages.map((stage, i) => ({
+                id: 'cl-' + Date.now() + '-' + i + '-' + Math.random().toString(36).slice(2),
+                title: stage.title || 'Nueva etapa',
+                items: (stage.items || []).map((it, j) => ({
+                    id: 'item-' + Date.now() + '-' + i + '-' + j + '-' + Math.random().toString(36).slice(2),
+                    text: typeof it === 'string' ? it : (it.text || ''),
+                    checked: false,
+                    assignee: '',
+                    status: 'todo',
+                })),
+            }));
+            card.expandedChecklistIndex = 0;
+        }
+
         function renderChecklists(card) {
             const container = document.getElementById('checklists-container');
             container.innerHTML = '';
-            
             if (!card.checklists) card.checklists = [];
+            if (typeof card.expandedChecklistIndex !== 'number' || card.expandedChecklistIndex < 0 || card.expandedChecklistIndex >= card.checklists.length) {
+                card.expandedChecklistIndex = 0;
+            }
             currentEditingCard = card;
-            
+            const expandedIndex = card.expandedChecklistIndex;
+
             card.checklists.forEach((checklist, checklistIndex) => {
-                const checklistEl = document.createElement('div');
-                checklistEl.className = 'checklist';
-                
-                // Header
+                const stageEl = document.createElement('div');
+                stageEl.className = 'checklist-stage' + (checklistIndex === expandedIndex ? ' expanded' : ' collapsed');
+
+                const items = checklist.items || [];
+                const checkedCount = items.filter(i => i.checked).length;
+                const totalCount = items.length;
+                const percentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
                 const header = document.createElement('div');
-                header.className = 'checklist-header';
-                
+                header.className = 'checklist-stage-header';
+                header.addEventListener('click', () => {
+                    card.expandedChecklistIndex = card.expandedChecklistIndex === checklistIndex ? -1 : checklistIndex;
+                    if (card.expandedChecklistIndex < 0) card.expandedChecklistIndex = checklistIndex;
+                    saveCard(card);
+                    renderChecklists(card);
+                });
+
+                const arrow = document.createElement('span');
+                arrow.className = 'checklist-stage-arrow';
+                arrow.textContent = '▶';
+                header.appendChild(arrow);
+
+                const titleWrap = document.createElement('div');
+                titleWrap.className = 'checklist-stage-title-wrap';
                 const titleInput = document.createElement('input');
                 titleInput.type = 'text';
-                titleInput.className = 'checklist-title-input';
+                titleInput.className = 'checklist-stage-title-input';
                 titleInput.value = checklist.title || '';
-                titleInput.placeholder = 'Checklist name';
+                titleInput.placeholder = 'Nombre de la etapa';
+                titleInput.addEventListener('click', (e) => e.stopPropagation());
                 titleInput.addEventListener('input', () => {
                     checklist.title = titleInput.value;
                     debounceSaveCard();
                 });
-                header.appendChild(titleInput);
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-checklist-btn';
-                deleteBtn.innerHTML = '×';
-                deleteBtn.title = 'Delete checklist';
-                deleteBtn.addEventListener('click', () => {
-                    currentEditingCard.checklists.splice(checklistIndex, 1);
-                    saveCard(currentEditingCard);
-                    renderChecklists(currentEditingCard);
-                });
-                header.appendChild(deleteBtn);
-                
-                checklistEl.appendChild(header);
-                
-                // Progress bar
-                const items = checklist.items || [];
-                const checkedCount = items.filter(i => i.checked).length;
-                const totalCount = items.length;
-                const percentage = totalCount > 0 ? (checkedCount / totalCount) * 100 : 0;
-                
+                titleWrap.appendChild(titleInput);
+                const progressText = document.createElement('span');
+                progressText.className = 'progress-text';
+                progressText.textContent = totalCount ? `${percentage}% (${checkedCount}/${totalCount})` : '—';
+                titleWrap.appendChild(progressText);
+                header.appendChild(titleWrap);
+                stageEl.appendChild(header);
+
+                const body = document.createElement('div');
+                body.className = 'checklist-stage-body';
+
                 const progress = document.createElement('div');
                 progress.className = 'checklist-progress';
                 progress.innerHTML = `
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${percentage}%"></div>
                     </div>
-                    <span class="progress-text">${Math.round(percentage)}%</span>
+                    <span class="progress-text">${percentage}%</span>
                 `;
-                checklistEl.appendChild(progress);
-                
-                // Items
+                body.appendChild(progress);
+
                 const itemsContainer = document.createElement('div');
                 itemsContainer.className = 'checklist-items';
-                
                 items.forEach((item, itemIndex) => {
                     if (item.assignee === undefined) item.assignee = '';
                     if (item.status === undefined) item.status = 'todo';
-
                     const itemEl = document.createElement('div');
                     itemEl.className = 'checklist-item' + (item.checked ? ' checked' : '');
-                    
                     const checkbox = document.createElement('div');
                     checkbox.className = 'item-checkbox' + (item.checked ? ' checked' : '');
                     checkbox.addEventListener('click', () => {
@@ -3229,26 +3434,25 @@
                         renderTasksSummary();
                     });
                     itemEl.appendChild(checkbox);
-                    
                     const textInput = document.createElement('input');
                     textInput.type = 'text';
                     textInput.className = 'item-text';
                     textInput.value = item.text || '';
-                    textInput.placeholder = 'New item...';
+                    textInput.placeholder = 'Nueva tarea...';
+                    textInput.title = item.text || '';
                     textInput.addEventListener('input', () => {
                         item.text = textInput.value;
+                        textInput.title = textInput.value;
                         debounceSaveCard();
                     });
                     itemEl.appendChild(textInput);
-
                     const assigneeSelect = document.createElement('select');
                     assigneeSelect.className = 'item-assignee';
-                    assigneeSelect.title = 'Assign to';
-                    const assigneeOpts = ['', ...ASSIGNEES];
-                    assigneeOpts.forEach(name => {
+                    assigneeSelect.title = 'Asignar a';
+                    ['', ...ASSIGNEES].forEach(name => {
                         const opt = document.createElement('option');
                         opt.value = name;
-                        opt.textContent = name || '— Assign —';
+                        opt.textContent = name || '— Asignar —';
                         if (item.assignee === name) opt.selected = true;
                         assigneeSelect.appendChild(opt);
                     });
@@ -3259,10 +3463,9 @@
                         renderTasksSummary();
                     });
                     itemEl.appendChild(assigneeSelect);
-
                     const statusSelect = document.createElement('select');
                     statusSelect.className = 'item-status status-' + (item.status || 'todo');
-                    statusSelect.title = 'Status';
+                    statusSelect.title = 'Estado';
                     TASK_STATUSES.forEach(({ id, label }) => {
                         const opt = document.createElement('option');
                         opt.value = id;
@@ -3278,7 +3481,6 @@
                         renderTasksSummary();
                     });
                     itemEl.appendChild(statusSelect);
-                    
                     const deleteItemBtn = document.createElement('button');
                     deleteItemBtn.className = 'delete-item-btn';
                     deleteItemBtn.innerHTML = '×';
@@ -3289,16 +3491,12 @@
                         renderTasksSummary();
                     });
                     itemEl.appendChild(deleteItemBtn);
-                    
                     itemsContainer.appendChild(itemEl);
                 });
-                
-                checklistEl.appendChild(itemsContainer);
-                
-                // Add item button
+                body.appendChild(itemsContainer);
                 const addItemBtn = document.createElement('button');
                 addItemBtn.className = 'add-item-btn';
-                addItemBtn.innerHTML = '+ Add item';
+                addItemBtn.innerHTML = '+ Añadir tarea';
                 addItemBtn.addEventListener('click', () => {
                     if (!checklist.items) checklist.items = [];
                     checklist.items.push({
@@ -3311,9 +3509,9 @@
                     saveCard(currentEditingCard);
                     renderChecklists(currentEditingCard);
                 });
-                checklistEl.appendChild(addItemBtn);
-                
-                container.appendChild(checklistEl);
+                body.appendChild(addItemBtn);
+                stageEl.appendChild(body);
+                container.appendChild(stageEl);
             });
         }
 
@@ -3396,20 +3594,96 @@
         });
 
         document.getElementById('add-checklist-btn').addEventListener('click', () => {
-            if (!currentEditingCard) {
-                currentEditingCard = cards.find(c => c.id === selectedCardId);
-            }
+            if (!currentEditingCard) currentEditingCard = cards.find(c => c.id === selectedCardId);
             if (!currentEditingCard) return;
-            
             if (!currentEditingCard.checklists) currentEditingCard.checklists = [];
             currentEditingCard.checklists.push({
                 id: Date.now().toString(),
-                title: 'New Checklist',
+                title: 'Nueva etapa',
                 items: []
             });
+            if (typeof currentEditingCard.expandedChecklistIndex !== 'number') currentEditingCard.expandedChecklistIndex = 0;
+            currentEditingCard.expandedChecklistIndex = currentEditingCard.checklists.length - 1;
             saveCard(currentEditingCard);
             renderChecklists(currentEditingCard);
         });
+
+        const importArea = document.getElementById('checklist-import-area');
+        const importTextarea = document.getElementById('checklist-import-textarea');
+        const pdfInput = document.getElementById('checklist-pdf-input');
+        const pdfStatus = document.getElementById('checklist-pdf-status');
+        document.querySelectorAll('.checklist-import-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.checklist-import-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('checklist-import-paste').style.display = tab.dataset.tab === 'paste' ? 'block' : 'none';
+                document.getElementById('checklist-import-pdf').style.display = tab.dataset.tab === 'pdf' ? 'block' : 'none';
+            });
+        });
+        document.getElementById('checklist-import-toggle').addEventListener('click', () => {
+            if (!currentEditingCard) currentEditingCard = cards.find(c => c.id === selectedCardId);
+            if (!currentEditingCard) return;
+            importArea.style.display = importArea.style.display === 'none' ? 'block' : 'none';
+            if (importArea.style.display === 'none') importTextarea.value = '';
+        });
+        document.getElementById('checklist-import-cancel').addEventListener('click', () => {
+            importArea.style.display = 'none';
+            importTextarea.value = '';
+        });
+        document.getElementById('checklist-import-apply').addEventListener('click', () => {
+            if (!currentEditingCard) currentEditingCard = cards.find(c => c.id === selectedCardId);
+            if (!currentEditingCard) return;
+            const raw = importTextarea.value.trim();
+            const parsed = parseImportDocument(raw || 'Etapa 1\n');
+            applyImportToCard(currentEditingCard, parsed);
+            saveCard(currentEditingCard);
+            renderChecklists(currentEditingCard);
+            importTextarea.value = '';
+            importArea.style.display = 'none';
+        });
+        if (pdfInput) {
+            pdfInput.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file || !file.name.toLowerCase().endsWith('.pdf')) return;
+                if (!currentEditingCard) currentEditingCard = cards.find(c => c.id === selectedCardId);
+                if (!currentEditingCard) return;
+                pdfStatus.textContent = 'Extrayendo texto del PDF...';
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    if (typeof pdfjsLib === 'undefined') {
+                        pdfStatus.textContent = 'Librería PDF no cargada. Usa «Pegar texto» y copia el contenido del PDF.';
+                        return;
+                    }
+                    if (pdfjsLib.GlobalWorkerOptions) pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const numPages = pdf.numPages;
+                    let fullText = '';
+                    for (let p = 1; p <= numPages; p++) {
+                        const page = await pdf.getPage(p);
+                        const content = await page.getTextContent();
+                        const items = content.items || [];
+                        if (items.length === 0) continue;
+                        const withY = items.map(it => ({ str: it.str, y: (it.transform && it.transform[5]) ?? 0 }));
+                        withY.sort((a, b) => b.y - a.y);
+                        let lastY = null;
+                        const tolerance = 5;
+                        for (const it of withY) {
+                            if (lastY !== null && Math.abs(it.y - lastY) > tolerance) fullText += '\n';
+                            fullText += (it.str || '');
+                            lastY = it.y;
+                        }
+                        fullText += '\n\n';
+                    }
+                    importTextarea.value = fullText.trim();
+                    document.querySelector('.checklist-import-tab[data-tab="paste"]').click();
+                    pdfStatus.textContent = 'Texto extraído. Revisa arriba y pulsa «Importar».';
+                } catch (err) {
+                    pdfStatus.textContent = 'No se pudo leer el PDF. Prueba a copiar el texto y pegarlo en «Pegar texto».';
+                    console.error(err);
+                }
+                pdfInput.value = '';
+            });
+        }
 
         let debounceTimer;
         function debounceUpdate() {
