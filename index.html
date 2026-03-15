@@ -1185,6 +1185,59 @@
             color: rgba(255,255,255,0.45);
             margin-top: 4px;
         }
+        .documents-section { margin-top: 20px; }
+        .documents-file-input {
+            display: block;
+            margin: 10px 0;
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+        }
+        .documents-file-input::file-selector-button {
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(139,92,246,0.25);
+            color: #c4b5fd;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .card-documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .card-document-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .card-document-item a {
+            flex: 1;
+            color: #93c5fd;
+            text-decoration: none;
+            font-size: 13px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card-document-item a:hover { text-decoration: underline; }
+        .card-document-item .doc-delete {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+        }
+        .card-document-item .doc-delete:hover { color: #ef4444; }
         .task-summary-add-form input {
             flex: 1;
             background: rgba(255, 255, 255, 0.06);
@@ -2330,6 +2383,13 @@
                     </div>
                     <div id="checklists-container"></div>
                 </div>
+
+                <div class="form-section documents-section">
+                    <label>Documentos</label>
+                    <p class="form-hint">Sube archivos (máx. ~400 KB cada uno). Se guardan en la base de datos; ideal para PDFs o documentos pequeños.</p>
+                    <input type="file" id="card-documents-input" multiple class="documents-file-input">
+                    <div id="card-documents-list" class="card-documents-list"></div>
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -3268,6 +3328,7 @@
                 scores: { ...DEFAULT_SCORES },
                 checklists: [],
                 roadmapSteps: [],
+                documents: [],
                 createdAt: new Date().toISOString(),
             };
             saveCard(newCard);
@@ -3515,6 +3576,39 @@
             });
         }
 
+        function renderCardDocuments(card) {
+            const listEl = document.getElementById('card-documents-list');
+            const inputEl = document.getElementById('card-documents-input');
+            if (!listEl || !inputEl) return;
+            if (!card.documents) card.documents = [];
+            listEl.innerHTML = '';
+            card.documents.forEach((doc, index) => {
+                const row = document.createElement('div');
+                row.className = 'card-document-item';
+                const link = document.createElement('a');
+                link.href = doc.data || doc.url || '#';
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.download = doc.name || '';
+                link.textContent = doc.name || 'Documento';
+                link.title = doc.name || '';
+                row.appendChild(link);
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'doc-delete';
+                delBtn.innerHTML = '×';
+                delBtn.title = 'Quitar de la lista';
+                delBtn.addEventListener('click', () => {
+                    card.documents.splice(index, 1);
+                    saveCard(card);
+                    renderCardDocuments(card);
+                });
+                row.appendChild(delBtn);
+                listEl.appendChild(row);
+            });
+            inputEl.value = '';
+        }
+
         function openModal(cardId) {
             const card = cards.find(c => c.id === cardId);
             if (!card) return;
@@ -3547,7 +3641,8 @@
 
             renderModalScores(card);
             renderChecklists(card);
-            
+            renderCardDocuments(card);
+
             const date = new Date(card.createdAt);
             document.getElementById('created-date').textContent = 
                 `Created: ${date.toLocaleDateString('en-US')}`;
@@ -3592,6 +3687,38 @@
         document.getElementById('modal-backdrop').addEventListener('click', (e) => {
             if (e.target.id === 'modal-backdrop') closeModal();
         });
+
+        const MAX_DOC_SIZE = 400 * 1024;
+        const cardDocumentsInput = document.getElementById('card-documents-input');
+        if (cardDocumentsInput) {
+            cardDocumentsInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                const card = currentEditingCard || cards.find(c => c.id === selectedCardId);
+                if (!card) return;
+                if (!card.documents) card.documents = [];
+                let pending = files.length;
+                [].forEach.call(files, (file) => {
+                    if (file.size > MAX_DOC_SIZE) {
+                        alert('"' + (file.name || 'El archivo') + '" es demasiado grande (máx. ~400 KB).');
+                        if (--pending === 0) e.target.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        card.documents.push({ name: file.name, data: reader.result });
+                        saveCard(card);
+                        renderCardDocuments(card);
+                        if (--pending === 0) e.target.value = '';
+                    };
+                    reader.onerror = () => {
+                        alert('No se pudo leer "' + (file.name || 'el archivo') + '".');
+                        if (--pending === 0) e.target.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
 
         document.getElementById('add-checklist-btn').addEventListener('click', () => {
             if (!currentEditingCard) currentEditingCard = cards.find(c => c.id === selectedCardId);
