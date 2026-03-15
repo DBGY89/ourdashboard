@@ -3425,22 +3425,23 @@
                     status: 'todo',
                 })),
             }));
-            card.expandedChecklistIndex = 0;
+            card.expandedChecklistIndices = [0];
         }
 
         function renderChecklists(card) {
             const container = document.getElementById('checklists-container');
             container.innerHTML = '';
             if (!card.checklists) card.checklists = [];
-            if (typeof card.expandedChecklistIndex !== 'number' || card.expandedChecklistIndex < 0 || card.expandedChecklistIndex >= card.checklists.length) {
-                card.expandedChecklistIndex = 0;
+            if (!Array.isArray(card.expandedChecklistIndices)) {
+                card.expandedChecklistIndices = typeof card.expandedChecklistIndex === 'number' && card.expandedChecklistIndex >= 0
+                    ? [card.expandedChecklistIndex] : [0];
             }
             currentEditingCard = card;
-            const expandedIndex = card.expandedChecklistIndex;
+            const expandedSet = new Set(card.expandedChecklistIndices);
 
             card.checklists.forEach((checklist, checklistIndex) => {
                 const stageEl = document.createElement('div');
-                stageEl.className = 'checklist-stage' + (checklistIndex === expandedIndex ? ' expanded' : ' collapsed');
+                stageEl.className = 'checklist-stage' + (expandedSet.has(checklistIndex) ? ' expanded' : ' collapsed');
 
                 const items = checklist.items || [];
                 const checkedCount = items.filter(i => i.checked).length;
@@ -3450,8 +3451,12 @@
                 const header = document.createElement('div');
                 header.className = 'checklist-stage-header';
                 header.addEventListener('click', () => {
-                    card.expandedChecklistIndex = card.expandedChecklistIndex === checklistIndex ? -1 : checklistIndex;
-                    if (card.expandedChecklistIndex < 0) card.expandedChecklistIndex = checklistIndex;
+                    if (expandedSet.has(checklistIndex)) {
+                        card.expandedChecklistIndices = card.expandedChecklistIndices.filter(i => i !== checklistIndex);
+                        if (card.expandedChecklistIndices.length === 0) card.expandedChecklistIndices.push(checklistIndex);
+                    } else {
+                        card.expandedChecklistIndices = card.expandedChecklistIndices.concat(checklistIndex).sort((a, b) => a - b);
+                    }
                     saveCard(card);
                     renderChecklists(card);
                 });
@@ -3778,8 +3783,9 @@
                 title: 'Nueva etapa',
                 items: []
             });
-            if (typeof currentEditingCard.expandedChecklistIndex !== 'number') currentEditingCard.expandedChecklistIndex = 0;
-            currentEditingCard.expandedChecklistIndex = currentEditingCard.checklists.length - 1;
+            if (!Array.isArray(currentEditingCard.expandedChecklistIndices)) currentEditingCard.expandedChecklistIndices = [];
+            const newIdx = currentEditingCard.checklists.length - 1;
+            if (!currentEditingCard.expandedChecklistIndices.includes(newIdx)) currentEditingCard.expandedChecklistIndices.push(newIdx);
             saveCard(currentEditingCard);
             renderChecklists(currentEditingCard);
         });
