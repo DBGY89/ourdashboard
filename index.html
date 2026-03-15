@@ -1295,6 +1295,68 @@
             border-color: rgba(139, 92, 246, 0.5);
             color: #a78bfa;
         }
+        /* Roadmap task: assignee & status */
+        .roadmap-step-assignee,
+        .roadmap-step-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.25);
+            color: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+            min-width: 0;
+        }
+        .roadmap-step-assignee { max-width: 95px; }
+        .roadmap-step-status { min-width: 100px; max-width: 110px; }
+        .roadmap-step-status.status-todo { color: rgba(255,255,255,0.7); }
+        .roadmap-step-status.status-in_progress { color: #fbbf24; border-color: rgba(245,158,11,0.4); }
+        .roadmap-step-status.status-done { color: #34d399; border-color: rgba(16,185,129,0.4); }
+        /* Roadmap DONE section (collapsible) */
+        .roadmap-done-section {
+            margin-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 12px;
+        }
+        .roadmap-done-toggle {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .roadmap-done-toggle:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .roadmap-done-toggle.expanded .roadmap-done-arrow {
+            transform: rotate(90deg);
+        }
+        .roadmap-done-arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+            font-size: 10px;
+        }
+        .roadmap-done-list {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .roadmap-done-list.visible {
+            display: flex;
+        }
+        .roadmap-step-row.done-row .roadmap-step-text {
+            color: rgba(255,255,255,0.85);
+        }
+        .roadmap-step-row.done-row.checked .roadmap-step-text {
+            text-decoration: line-through;
+            color: rgba(255,255,255,0.55);
+        }
         /* Right column: visual path */
         .roadmap-visual-section {
             background: rgba(255,255,255,0.03);
@@ -2049,10 +2111,14 @@
                 <div id="roadmap-content" class="roadmap-layout" style="display: none;">
                     <div class="roadmap-left">
                         <div class="roadmap-section steps-section">
-                            <h3>Steps to complete</h3>
-                            <p class="roadmap-hint">Define the steps to reach your goal. Check them off as you go — the path on the right updates as you progress.</p>
+                            <h3>Tareas pendientes</h3>
+                            <p class="roadmap-hint">Asigna cada tarea, cambia el estado y márcala como hecha cuando termine. Las completadas pasan a DONE (puedes abrirlas y volver a In progress si hace falta).</p>
                             <div id="roadmap-steps-list" class="roadmap-steps-list"></div>
-                            <button type="button" class="roadmap-add-step" id="roadmap-add-step">+ Add step</button>
+                            <button type="button" class="roadmap-add-step" id="roadmap-add-step">+ Añadir tarea</button>
+                            <div class="roadmap-done-section" id="roadmap-done-section" style="display: none;">
+                                <button type="button" class="roadmap-done-toggle" id="roadmap-done-toggle">Done (0) <span class="roadmap-done-arrow">▶</span></button>
+                                <div id="roadmap-done-list" class="roadmap-done-list"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="roadmap-visual-section">
@@ -2378,23 +2444,35 @@
         }
 
         function getSelectedRoadmapCard() {
-            if (!selectedRoadmapCardId) return null;
-            const card = cards.find(c => c.id === selectedRoadmapCardId);
-            return card || null;
+            const id = selectedRoadmapCardId || document.getElementById('roadmap-project-select')?.value;
+            if (!id) return null;
+            return cards.find(c => c.id === id) || null;
+        }
+
+        function normalizeRoadmapStep(step) {
+            if (step.status === undefined) step.status = step.checked ? 'done' : 'todo';
+            if (step.assignee === undefined) step.assignee = '';
+            if (step.status === 'done') step.checked = true;
+            else step.checked = false;
         }
 
         function renderRoadmapStepsList() {
             const card = getSelectedRoadmapCard();
             const listEl = document.getElementById('roadmap-steps-list');
+            const doneSection = document.getElementById('roadmap-done-section');
+            const doneToggle = document.getElementById('roadmap-done-toggle');
+            const doneListEl = document.getElementById('roadmap-done-list');
             if (!card || !listEl) return;
 
             if (!card.roadmapSteps) card.roadmapSteps = [];
-            const steps = card.roadmapSteps;
+            card.roadmapSteps.forEach(normalizeRoadmapStep);
+            const pending = card.roadmapSteps.filter(s => s.status !== 'done');
+            const doneSteps = card.roadmapSteps.filter(s => s.status === 'done');
 
             listEl.innerHTML = '';
-            steps.forEach((step, index) => {
+            pending.forEach((step, index) => {
                 const row = document.createElement('div');
-                row.className = 'roadmap-step-row' + (step.checked ? ' checked' : '');
+                row.className = 'roadmap-step-row';
                 row.dataset.stepId = step.id;
 
                 const checkbox = document.createElement('div');
@@ -2402,7 +2480,8 @@
                 checkbox.setAttribute('role', 'button');
                 checkbox.tabIndex = 0;
                 checkbox.addEventListener('click', () => {
-                    step.checked = !step.checked;
+                    step.status = 'done';
+                    step.checked = true;
                     saveCard(card);
                     renderRoadmapStepsList();
                     renderRoadmapTimeline();
@@ -2413,7 +2492,7 @@
                 textInput.type = 'text';
                 textInput.className = 'roadmap-step-text';
                 textInput.value = step.text || '';
-                textInput.placeholder = 'Step ' + (index + 1);
+                textInput.placeholder = 'Tarea ' + (index + 1);
                 textInput.addEventListener('input', () => {
                     clearTimeout(roadmapDebounceTimer);
                     roadmapDebounceTimer = setTimeout(() => {
@@ -2423,11 +2502,45 @@
                     }, 400);
                 });
 
+                const assigneeSelect = document.createElement('select');
+                assigneeSelect.className = 'roadmap-step-assignee';
+                assigneeSelect.title = 'Asignar a';
+                ['', ...ASSIGNEES].forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name || '— Asignar —';
+                    if (step.assignee === name) opt.selected = true;
+                    assigneeSelect.appendChild(opt);
+                });
+                assigneeSelect.addEventListener('change', () => {
+                    step.assignee = assigneeSelect.value || '';
+                    saveCard(card);
+                });
+
+                const statusSelect = document.createElement('select');
+                statusSelect.className = 'roadmap-step-status status-' + (step.status || 'todo');
+                statusSelect.title = 'Estado';
+                TASK_STATUSES.forEach(({ id, label }) => {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = label;
+                    if ((step.status || 'todo') === id) opt.selected = true;
+                    statusSelect.appendChild(opt);
+                });
+                statusSelect.addEventListener('change', () => {
+                    step.status = statusSelect.value;
+                    step.checked = step.status === 'done';
+                    statusSelect.className = 'roadmap-step-status status-' + step.status;
+                    saveCard(card);
+                    renderRoadmapStepsList();
+                    renderRoadmapTimeline();
+                });
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
                 deleteBtn.className = 'roadmap-step-delete';
                 deleteBtn.textContent = '×';
-                deleteBtn.title = 'Remove step';
+                deleteBtn.title = 'Eliminar tarea';
                 deleteBtn.addEventListener('click', () => {
                     card.roadmapSteps = card.roadmapSteps.filter(s => s.id !== step.id);
                     saveCard(card);
@@ -2437,9 +2550,108 @@
 
                 row.appendChild(checkbox);
                 row.appendChild(textInput);
+                row.appendChild(assigneeSelect);
+                row.appendChild(statusSelect);
                 row.appendChild(deleteBtn);
                 listEl.appendChild(row);
             });
+
+            if (doneSection && doneToggle && doneListEl) {
+                if (doneSteps.length > 0) {
+                    doneSection.style.display = 'block';
+                    const wasExpanded = doneListEl.classList.contains('visible');
+                    doneToggle.innerHTML = 'Done (' + doneSteps.length + ') <span class="roadmap-done-arrow">' + (wasExpanded ? '▼' : '▶') + '</span>';
+                    doneToggle.classList.toggle('expanded', wasExpanded);
+                    doneListEl.innerHTML = '';
+                    if (wasExpanded) doneListEl.classList.add('visible');
+                    doneSteps.forEach((step, index) => {
+                        const row = document.createElement('div');
+                        row.className = 'roadmap-step-row done-row checked';
+                        row.dataset.stepId = step.id;
+
+                        const checkbox = document.createElement('div');
+                        checkbox.className = 'roadmap-step-checkbox';
+                        checkbox.setAttribute('role', 'button');
+                        checkbox.tabIndex = 0;
+                        checkbox.addEventListener('click', () => {
+                            step.status = 'in_progress';
+                            step.checked = false;
+                            saveCard(card);
+                            renderRoadmapStepsList();
+                            renderRoadmapTimeline();
+                        });
+                        checkbox.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); checkbox.click(); } });
+
+                        const textInput = document.createElement('input');
+                        textInput.type = 'text';
+                        textInput.className = 'roadmap-step-text';
+                        textInput.value = step.text || '';
+                        textInput.placeholder = 'Tarea';
+                        textInput.addEventListener('input', () => {
+                            clearTimeout(roadmapDebounceTimer);
+                            roadmapDebounceTimer = setTimeout(() => {
+                                step.text = textInput.value.trim();
+                                saveCard(card);
+                                renderRoadmapTimeline();
+                            }, 400);
+                        });
+
+                        const assigneeSelect = document.createElement('select');
+                        assigneeSelect.className = 'roadmap-step-assignee';
+                        assigneeSelect.title = 'Asignar a';
+                        ['', ...ASSIGNEES].forEach(name => {
+                            const opt = document.createElement('option');
+                            opt.value = name;
+                            opt.textContent = name || '— Asignar —';
+                            if (step.assignee === name) opt.selected = true;
+                            assigneeSelect.appendChild(opt);
+                        });
+                        assigneeSelect.addEventListener('change', () => {
+                            step.assignee = assigneeSelect.value || '';
+                            saveCard(card);
+                        });
+
+                        const statusSelect = document.createElement('select');
+                        statusSelect.className = 'roadmap-step-status status-done';
+                        statusSelect.title = 'Estado (puedes volver a In progress)';
+                        TASK_STATUSES.forEach(({ id, label }) => {
+                            const opt = document.createElement('option');
+                            opt.value = id;
+                            opt.textContent = label;
+                            if ((step.status || 'done') === id) opt.selected = true;
+                            statusSelect.appendChild(opt);
+                        });
+                        statusSelect.addEventListener('change', () => {
+                            step.status = statusSelect.value;
+                            step.checked = step.status === 'done';
+                            saveCard(card);
+                            renderRoadmapStepsList();
+                            renderRoadmapTimeline();
+                        });
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.className = 'roadmap-step-delete';
+                        deleteBtn.textContent = '×';
+                        deleteBtn.title = 'Eliminar tarea';
+                        deleteBtn.addEventListener('click', () => {
+                            card.roadmapSteps = card.roadmapSteps.filter(s => s.id !== step.id);
+                            saveCard(card);
+                            renderRoadmapStepsList();
+                            renderRoadmapTimeline();
+                        });
+
+                        row.appendChild(checkbox);
+                        row.appendChild(textInput);
+                        row.appendChild(assigneeSelect);
+                        row.appendChild(statusSelect);
+                        row.appendChild(deleteBtn);
+                        doneListEl.appendChild(row);
+                    });
+                } else {
+                    doneSection.style.display = 'none';
+                }
+            }
         }
 
         function renderRoadmapTimeline() {
@@ -2449,7 +2661,8 @@
             if (!card || !pathEl) return;
 
             const steps = getRoadmapSteps(card);
-            const doneCount = steps.filter(s => s.checked).length;
+            steps.forEach(normalizeRoadmapStep);
+            const doneCount = steps.filter(s => s.status === 'done' || s.checked).length;
             const total = steps.length;
             const percent = total ? Math.round((doneCount / total) * 100) : 0;
 
@@ -2478,8 +2691,8 @@
             nodesWrap.className = 'roadmap-path-nodes';
 
             steps.forEach((step, index) => {
-                const isDone = step.checked;
-                const isCurrent = !isDone && steps.slice(0, index).every(s => s.checked);
+                const isDone = step.status === 'done' || step.checked;
+                const isCurrent = !isDone && steps.slice(0, index).every(s => s.status === 'done' || s.checked);
                 const node = document.createElement('div');
                 node.className = 'roadmap-path-node' + (isDone ? ' done' : '') + (isCurrent ? ' current' : '');
 
@@ -2511,6 +2724,17 @@
             const emptyEl = document.getElementById('roadmap-empty');
             const contentEl = document.getElementById('roadmap-content');
             const addStepBtn = document.getElementById('roadmap-add-step');
+            const doneToggle = document.getElementById('roadmap-done-toggle');
+            const doneList = document.getElementById('roadmap-done-list');
+
+            if (doneToggle && doneList) {
+                doneToggle.addEventListener('click', () => {
+                    doneList.classList.toggle('visible');
+                    doneToggle.classList.toggle('expanded');
+                    const arrow = doneToggle.querySelector('.roadmap-done-arrow');
+                    if (arrow) arrow.textContent = doneList.classList.contains('visible') ? '▼' : '▶';
+                });
+            }
 
             if (selectEl && emptyEl && contentEl) {
                 selectEl.addEventListener('change', () => {
@@ -2536,6 +2760,8 @@
                         id: Date.now().toString(),
                         text: '',
                         checked: false,
+                        assignee: '',
+                        status: 'todo',
                     });
                     saveCard(card);
                     renderRoadmapStepsList();
