@@ -3502,12 +3502,23 @@
                 const itemsContainer = document.createElement('div');
                 itemsContainer.className = 'checklist-items';
                 itemsContainer.dataset.checklistIndex = String(checklistIndex);
+                function getDropIndex(container, clientY) {
+                    const items = container.querySelectorAll('.checklist-item');
+                    for (let i = 0; i < items.length; i++) {
+                        const rect = items[i].getBoundingClientRect();
+                        if (clientY <= rect.top + rect.height / 2) return i;
+                    }
+                    return items.length;
+                }
                 itemsContainer.ondragover = (e) => {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'move';
                     itemsContainer.classList.add('drag-over');
+                    itemsContainer._dropIndex = getDropIndex(itemsContainer, e.clientY);
                 };
-                itemsContainer.ondragleave = () => itemsContainer.classList.remove('drag-over');
+                itemsContainer.ondragleave = (e) => {
+                    if (!itemsContainer.contains(e.relatedTarget)) itemsContainer.classList.remove('drag-over');
+                };
                 itemsContainer.ondrop = (e) => {
                     e.preventDefault();
                     itemsContainer.classList.remove('drag-over');
@@ -3516,9 +3527,7 @@
                         const srcListIdx = data.checklistIndex;
                         const srcItemIdx = data.itemIndex;
                         const tgtListIdx = parseInt(itemsContainer.dataset.checklistIndex, 10);
-                        const dropEl = document.elementFromPoint(e.clientX, e.clientY);
-                        const dropItem = dropEl && dropEl.closest('.checklist-item');
-                        const tgtItemIdx = dropItem ? parseInt(dropItem.dataset.itemIndex, 10) : itemsContainer.children.length;
+                        const tgtItemIdx = typeof itemsContainer._dropIndex === 'number' ? itemsContainer._dropIndex : getDropIndex(itemsContainer, e.clientY);
                         const item = currentEditingCard.checklists[srcListIdx].items[srcItemIdx];
                         currentEditingCard.checklists[srcListIdx].items.splice(srcItemIdx, 1);
                         if (srcListIdx === tgtListIdx) {
