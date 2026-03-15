@@ -3516,10 +3516,18 @@
                         const srcListIdx = data.checklistIndex;
                         const srcItemIdx = data.itemIndex;
                         const tgtListIdx = parseInt(itemsContainer.dataset.checklistIndex, 10);
-                        if (srcListIdx === tgtListIdx) return;
+                        const dropEl = document.elementFromPoint(e.clientX, e.clientY);
+                        const dropItem = dropEl && dropEl.closest('.checklist-item');
+                        const tgtItemIdx = dropItem ? parseInt(dropItem.dataset.itemIndex, 10) : itemsContainer.children.length;
                         const item = currentEditingCard.checklists[srcListIdx].items[srcItemIdx];
                         currentEditingCard.checklists[srcListIdx].items.splice(srcItemIdx, 1);
-                        currentEditingCard.checklists[tgtListIdx].items.push(item);
+                        if (srcListIdx === tgtListIdx) {
+                            let insertIdx = tgtItemIdx;
+                            if (insertIdx > srcItemIdx) insertIdx--;
+                            currentEditingCard.checklists[tgtListIdx].items.splice(insertIdx, 0, item);
+                        } else {
+                            currentEditingCard.checklists[tgtListIdx].items.push(item);
+                        }
                         saveCard(currentEditingCard);
                         renderChecklists(currentEditingCard);
                         renderTasksSummary();
