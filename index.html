@@ -869,6 +869,21 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            min-height: 8px;
+            transition: background 0.2s;
+        }
+        .checklist-items.drag-over {
+            background: rgba(139, 92, 246, 0.12);
+            border-radius: 8px;
+        }
+        .checklist-item.dragging {
+            opacity: 0.5;
+        }
+        .checklist-item[draggable="true"] {
+            cursor: grab;
+        }
+        .checklist-item[draggable="true"]:active {
+            cursor: grabbing;
         }
 
         .checklist-item {
@@ -3481,11 +3496,45 @@
 
                 const itemsContainer = document.createElement('div');
                 itemsContainer.className = 'checklist-items';
+                itemsContainer.dataset.checklistIndex = String(checklistIndex);
+                itemsContainer.ondragover = (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    itemsContainer.classList.add('drag-over');
+                };
+                itemsContainer.ondragleave = () => itemsContainer.classList.remove('drag-over');
+                itemsContainer.ondrop = (e) => {
+                    e.preventDefault();
+                    itemsContainer.classList.remove('drag-over');
+                    try {
+                        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                        const srcListIdx = data.checklistIndex;
+                        const srcItemIdx = data.itemIndex;
+                        const tgtListIdx = parseInt(itemsContainer.dataset.checklistIndex, 10);
+                        if (srcListIdx === tgtListIdx) return;
+                        const item = currentEditingCard.checklists[srcListIdx].items[srcItemIdx];
+                        currentEditingCard.checklists[srcListIdx].items.splice(srcItemIdx, 1);
+                        currentEditingCard.checklists[tgtListIdx].items.push(item);
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    } catch (err) { /* ignore */ }
+                };
                 items.forEach((item, itemIndex) => {
                     if (item.assignee === undefined) item.assignee = '';
                     if (item.status === undefined) item.status = 'todo';
                     const itemEl = document.createElement('div');
                     itemEl.className = 'checklist-item' + (item.checked ? ' checked' : '');
+                    itemEl.draggable = true;
+                    itemEl.dataset.checklistIndex = String(checklistIndex);
+                    itemEl.dataset.itemIndex = String(itemIndex);
+                    itemEl.ondragstart = (e) => {
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+                        e.dataTransfer.setData('application/json', JSON.stringify({ checklistIndex, itemIndex }));
+                        e.dataTransfer.effectAllowed = 'move';
+                        itemEl.classList.add('dragging');
+                    };
+                    itemEl.ondragend = () => itemEl.classList.remove('dragging');
                     const checkbox = document.createElement('div');
                     checkbox.className = 'item-checkbox' + (item.checked ? ' checked' : '');
                     checkbox.addEventListener('click', () => {
