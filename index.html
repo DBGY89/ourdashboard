@@ -1,0 +1,3448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1e1e2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Incubadora de Ideas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 24px 32px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .main-nav {
+            display: flex;
+            gap: 4px;
+            padding: 0 24px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .main-nav-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .main-nav-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .main-nav-btn.active {
+            color: #a78bfa;
+            background: rgba(139, 92, 246, 0.2);
+        }
+        .app-view {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .app-view.active {
+            display: flex;
+        }
+            #view-tasks {
+                overflow-y: auto;
+                overflow-x: hidden;
+                min-width: 0;
+            }
+            .tasks-summary {
+                min-width: 0;
+                overflow-x: hidden;
+            }
+
+        .auth-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .login-btn,
+        .logout-btn {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .login-btn:hover,
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .user-email {
+            max-width: 180px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .sync-dot.offline {
+            background: #ef4444;
+        }
+
+        .sync-dot.syncing {
+            background: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .board {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            overflow-x: auto;
+            flex: 1;
+            align-items: flex-start;
+        }
+
+        .column {
+            min-width: 300px;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 150px);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid;
+        }
+
+        .column-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .card-count {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .column-cards {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .add-card-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-card-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            flex: 1;
+            min-width: 0;
+        }
+        .card-pm-badge {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e1e2e;
+            flex-shrink: 0;
+        }
+        .card-pm-badge.m { background: #a78bfa; }
+        .card-pm-badge.d { background: #34d399; }
+
+        .card-preview {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-checklist-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-checklist-info.complete {
+            color: #10b981;
+        }
+
+        .priority-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        .priority-bar {
+            display: flex;
+            gap: 3px;
+            flex: 1;
+            max-width: 100px;
+        }
+
+        .priority-segment {
+            height: 6px;
+            flex: 1;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .priority-bar.interactive .priority-segment {
+            cursor: pointer;
+            height: 10px;
+        }
+
+        .priority-bar.interactive .priority-segment:hover {
+            transform: scaleY(1.3);
+        }
+
+        .score-bar-4 {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+            max-width: 120px;
+        }
+        .score-segment {
+            height: 8px;
+            flex: 1;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .score-bar-4.interactive .score-segment {
+            cursor: pointer;
+            height: 12px;
+        }
+        .score-bar-4.interactive .score-segment:hover {
+            transform: scaleY(1.2);
+        }
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .score-row label {
+            min-width: 180px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
+        }
+        .score-average-row {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .score-average-row .score-average-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 48px;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-backdrop.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #2a2a3e 0%, #1e1e2e 100%);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-title-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+            outline: none;
+        }
+
+        .modal-title-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .modal-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-section label {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-section textarea,
+        .form-section input[type="text"],
+        .select-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 14px;
+            color: #ffffff;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .form-section textarea:focus,
+        .form-section input[type="text"]:focus,
+        .select-input:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-section textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .select-input {
+            cursor: pointer;
+        }
+
+        .select-input option {
+            background: #1e1e2e;
+            color: #ffffff;
+        }
+
+        .priority-selector {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .priority-selector .priority-bar {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .priority-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            min-width: 40px;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .created-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        /* Checklist Styles */
+        .checklists-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .checklists-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .checklists-header label {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-checklist-btn {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #a78bfa;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-checklist-btn:hover {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: rgba(139, 92, 246, 0.6);
+        }
+
+        .checklist {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .checklist-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .checklist-title-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 4px 0;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .checklist-title-input:hover,
+        .checklist-title-input:focus {
+            border-bottom-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .checklist-title-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .delete-checklist-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .delete-checklist-btn:hover {
+            color: #ef4444;
+        }
+
+        .checklist-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            min-width: 35px;
+        }
+
+        .checklist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .checklist-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .checklist-item.checked {
+            opacity: 0.6;
+        }
+
+        .checklist-item.checked .item-text {
+            text-decoration: line-through;
+        }
+
+        .item-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .item-checkbox:hover {
+            border-color: #8b5cf6;
+        }
+
+        .item-checkbox.checked {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .item-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .item-text {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+            padding: 2px 0;
+        }
+
+        .item-text::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .delete-item-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 2px 6px;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover .delete-item-btn {
+            opacity: 1;
+        }
+
+        .delete-item-btn:hover {
+            color: #ef4444;
+        }
+
+        .add-item-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: transparent;
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 6px;
+        }
+
+        .add-item-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .item-assignee, .item-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+        }
+        .item-status.status-todo { border-color: rgba(255,255,255,0.2); }
+        .item-status.status-in_progress { border-color: #f59e0b; color: #fbbf24; }
+        .item-status.status-done { border-color: #10b981; color: #34d399; }
+
+        .tasks-summary {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tasks-summary h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .tasks-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        .tasks-summary-column {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .tasks-summary-column h3 {
+            font-size: 15px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .task-summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        .task-summary-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .task-summary-item {
+            align-items: flex-start;
+        }
+        .task-summary-item .task-card-title {
+            color: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .task-summary-item .task-text {
+            flex: 1;
+            color: #ffffff;
+            white-space: normal;
+            word-break: break-word;
+            font-size: 13px;
+            line-height: 1.35;
+            min-width: 0;
+        }
+        .task-summary-item .task-status-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .task-summary-item .task-status-badge:hover {
+            filter: brightness(1.15);
+        }
+        .task-summary-item .task-status-badge.todo { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+        .task-summary-item .task-status-badge.in_progress { background: rgba(245,158,11,0.25); color: #fbbf24; }
+        .task-summary-item .task-status-badge.done { background: rgba(16,185,129,0.25); color: #34d399; }
+        .task-summary-item .task-status-select {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+            min-width: 90px;
+        }
+        .task-summary-item .task-status-select.todo { color: rgba(255,255,255,0.7); }
+        .task-summary-item .task-status-select.in_progress { color: #fbbf24; border-color: rgba(245,158,11,0.4); }
+        .task-summary-item .task-status-select.done { color: #34d399; border-color: rgba(16,185,129,0.4); }
+        .task-summary-item .task-assignee-badge {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .task-summary-item .task-assignee-badge.m { background: rgba(236, 72, 153, 0.35); color: #f472b6; }
+        .task-summary-item .task-assignee-badge.d { background: rgba(59, 130, 246, 0.35); color: #60a5fa; }
+        .tasks-summary-done-section {
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 8px;
+        }
+        .tasks-summary-done-toggle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.45);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 0;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tasks-summary-done-toggle:hover {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .tasks-summary-done-toggle.expanded .tasks-summary-done-arrow {
+            transform: rotate(180deg);
+        }
+        .tasks-summary-done-list {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .tasks-summary-done-list.visible {
+            display: flex;
+        }
+        .task-summary-item.done-item {
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+        .task-summary-item.done-item .task-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .tasks-summary-empty {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            padding: 8px 0;
+        }
+        .tasks-summary-column h3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .task-summary-add-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .task-summary-add-btn:hover {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: #8b5cf6;
+        }
+        .task-summary-add-form {
+            display: none;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .task-summary-add-form.visible {
+            display: flex;
+        }
+        .task-summary-add-form select {
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 12px;
+            min-width: 90px;
+        }
+        .form-hint {
+            display: block;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            margin-top: 4px;
+        }
+        .task-summary-add-form input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            color: #fff;
+        }
+        .task-summary-add-form input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .task-summary-add-form button {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            background: #8b5cf6;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .task-summary-item.general .task-card-title {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .task-summary-item .task-delete-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 14px;
+        }
+        .task-summary-item .task-unassign-btn {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 0;
+        }
+        .task-summary-item .task-unassign-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+        .task-summary-item .task-delete-btn:hover {
+            color: #ef4444;
+        }
+        .column.drag-over {
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 12px;
+        }
+        .card.dragging {
+            opacity: 0.5;
+        }
+
+        /* Roadmap view — horizontal layout: left = project + steps, right = path */
+        .roadmap-view {
+            padding: 24px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .roadmap-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 28px;
+            align-items: start;
+            flex: 1;
+            min-height: 0;
+        }
+        .roadmap-left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+        .roadmap-project-select-wrap {
+            flex-shrink: 0;
+            margin-bottom: 16px;
+        }
+        .roadmap-project-select-wrap label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .roadmap-project-select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .roadmap-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            padding: 48px 24px;
+            font-size: 14px;
+        }
+        .roadmap-section {
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .roadmap-section.steps-section {
+            flex: 1;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .roadmap-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .roadmap-section .roadmap-hint {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        .roadmap-steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        .roadmap-step-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .roadmap-step-row.checked {
+            opacity: 0.9;
+        }
+        .roadmap-step-row.checked .roadmap-step-text {
+            text-decoration: line-through;
+            color: rgba(255,255,255,0.55);
+        }
+        .roadmap-step-checkbox {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border: 2px solid rgba(255,255,255,0.35);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .roadmap-step-row.checked .roadmap-step-checkbox {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        .roadmap-step-checkbox::after {
+            content: '';
+        }
+        .roadmap-step-row.checked .roadmap-step-checkbox::after {
+            content: '✓';
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .roadmap-step-text {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            color: #fff;
+            outline: none;
+            padding: 4px 0;
+            min-width: 0;
+        }
+        .roadmap-step-text::placeholder {
+            color: rgba(255,255,255,0.35);
+        }
+        .roadmap-step-delete {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.25);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            flex-shrink: 0;
+        }
+        .roadmap-step-delete:hover {
+            color: #ef4444;
+        }
+        .roadmap-add-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            background: transparent;
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .roadmap-add-step:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            color: #a78bfa;
+        }
+        /* Right column: visual path */
+        .roadmap-visual-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 28px 32px;
+            border: 1px solid rgba(255,255,255,0.08);
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+        .roadmap-visual-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .roadmap-journey-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+        }
+        .roadmap-progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .roadmap-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 4px;
+            transition: width 0.35s ease;
+        }
+        /* Horizontal path */
+        .roadmap-path {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            position: relative;
+            flex: 1;
+            min-height: 120px;
+        }
+        .roadmap-path-track {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            top: 28px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            z-index: 0;
+        }
+        .roadmap-path-track-done {
+            position: absolute;
+            left: 24px;
+            top: 28px;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 2px;
+            z-index: 1;
+            transition: width 0.4s ease;
+        }
+        .roadmap-path-nodes {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            gap: 8px;
+        }
+        .roadmap-path-node {
+            flex: 1;
+            min-width: 0;
+            max-width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .roadmap-path-node-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            background: #1e1e2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot {
+            background: #10b981;
+            border-color: #10b981;
+            color: #fff;
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot::after {
+            content: '✓';
+        }
+        .roadmap-path-node.done .roadmap-path-node-dot span {
+            display: none;
+        }
+        .roadmap-path-node.current .roadmap-path-node-dot {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.4);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.25);
+        }
+        .roadmap-path-node-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            margin-top: 10px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+        .roadmap-path-node.done .roadmap-path-node-text {
+            color: rgba(255,255,255,0.65);
+        }
+        .roadmap-path-node-badge {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            color: rgba(255,255,255,0.45);
+        }
+        .roadmap-path-node.done .roadmap-path-node-badge {
+            color: rgba(16, 185, 129, 0.95);
+        }
+        .roadmap-path-node.current .roadmap-path-node-badge {
+            color: #a78bfa;
+        }
+        .roadmap-path-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.45);
+            font-size: 14px;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        /* Pantalla de clave de acceso */
+        .access-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 24px;
+        }
+        .access-gate.hidden {
+            display: none;
+        }
+        .access-gate h1 {
+            font-size: 28px;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        .access-gate p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .access-gate form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .access-gate input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-size: 16px;
+            color: #ffffff;
+            outline: none;
+        }
+        .access-gate input:focus {
+            border-color: #8b5cf6;
+        }
+        .access-gate input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .access-gate button {
+            background: #8b5cf6;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .access-gate button:hover {
+            background: #7c3aed;
+        }
+        .access-gate .error {
+            color: #ef4444;
+            font-size: 13px;
+            text-align: center;
+        }
+        .access-gate .access-gate-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .access-gate #auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        /* ========== Mobile / responsive ========== */
+        @media (max-width: 768px) {
+            html {
+                -webkit-text-size-adjust: 100%;
+            }
+            body {
+                overflow-x: hidden;
+            }
+
+            /* Header */
+            .header {
+                flex-wrap: wrap;
+                padding: 12px 16px;
+                gap: 10px;
+            }
+            .header-left h1 {
+                font-size: 18px;
+                line-height: 1.3;
+            }
+            .subtitle {
+                font-size: 12px;
+                display: none;
+            }
+            .header-right {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .sync-status {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .sync-status span {
+                display: none;
+            }
+            .logout-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Main nav */
+            .main-nav {
+                padding: 8px 12px 10px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .main-nav-btn {
+                flex: 1;
+                min-width: 0;
+                padding: 12px 14px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+
+            /* Board & columns */
+            .board {
+                padding: 12px 16px;
+                gap: 16px;
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 24px;
+            }
+            .column {
+                min-width: 280px;
+                max-width: 280px;
+                scroll-snap-align: start;
+                scroll-snap-stop: always;
+                padding: 12px;
+                max-height: none;
+            }
+            .column-header h2 {
+                font-size: 14px;
+            }
+            .card-count {
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+
+            /* Cards */
+            .card {
+                padding: 12px;
+            }
+            .card-title {
+                font-size: 14px;
+            }
+            .card-preview {
+                font-size: 12px;
+            }
+            .card-footer {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .score-bar-4 {
+                max-width: 90px;
+            }
+            .score-segment {
+                height: 6px;
+            }
+            .card:hover {
+                transform: none;
+            }
+
+            /* Modal */
+            .modal-backdrop {
+                padding: 0;
+                align-items: flex-end;
+            }
+            .modal {
+                max-width: 100%;
+                max-height: 92vh;
+                border-radius: 16px 16px 0 0;
+                border-bottom: none;
+            }
+            .modal-header {
+                padding: 14px 16px;
+            }
+            .modal-title-input {
+                font-size: 18px;
+            }
+            .close-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
+                flex-shrink: 0;
+            }
+            .modal {
+                overflow-x: hidden;
+            }
+            .modal-body {
+                padding: 16px;
+                gap: 14px;
+                overflow-x: hidden;
+                max-width: 100%;
+            }
+            .form-section {
+                min-width: 0;
+                overflow: hidden;
+            }
+            .form-section label {
+                font-size: 11px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                max-width: 100%;
+            }
+            .form-section textarea,
+            .form-section input[type="text"],
+            .select-input {
+                padding: 14px 16px;
+                font-size: 16px;
+                min-height: 48px;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            .form-section textarea {
+                min-height: 80px;
+            }
+            .score-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .score-row label {
+                min-width: 100%;
+                font-size: 12px;
+            }
+            .score-average-row {
+                margin-top: 10px;
+                padding-top: 10px;
+                flex-wrap: wrap;
+            }
+            .modal-footer {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .delete-btn {
+                padding: 12px 16px;
+                min-height: 44px;
+            }
+
+            /* Checklists in modal */
+            .checklist {
+                padding: 12px;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .checklist-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .checklist-title-input {
+                font-size: 14px;
+                min-width: 0;
+                flex: 1;
+            }
+            .checklist-item {
+                flex-wrap: wrap;
+                min-width: 0;
+            }
+            .item-checkbox {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                min-height: 24px;
+                flex-shrink: 0;
+            }
+            .item-text {
+                font-size: 15px;
+                min-height: 24px;
+                min-width: 0;
+                flex: 1;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            .checklist-item .item-assignee,
+            .checklist-item .item-status {
+                padding: 8px 10px;
+                font-size: 12px;
+                min-height: 40px;
+                flex-shrink: 0;
+            }
+            .add-item-btn {
+                padding: 12px;
+                font-size: 14px;
+                min-height: 44px;
+            }
+            .add-checklist-btn {
+                padding: 10px 14px;
+                font-size: 13px;
+                min-height: 44px;
+            }
+
+            /* Task summary */
+            .tasks-summary {
+                padding: 12px 16px;
+            }
+            .tasks-summary h2 {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+            .tasks-summary-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .tasks-summary-column {
+                padding: 12px;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .tasks-summary-column h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            .task-summary-item {
+                padding: 10px 12px;
+                font-size: 13px;
+                gap: 8px;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .task-summary-item .task-card-title {
+                max-width: calc(100% - 80px);
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .task-summary-item .task-text {
+                font-size: 13px;
+                width: 100%;
+                flex: 1 1 100%;
+                min-width: 0;
+                word-break: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
+            }
+            .task-summary-item .task-status-select {
+                min-width: 105px;
+                padding: 8px 10px;
+                font-size: 11px;
+                min-height: 40px;
+                flex-shrink: 0;
+            }
+            .task-summary-item .task-assignee-badge {
+                flex-shrink: 0;
+            }
+            .task-summary-add-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+                min-width: 44px;
+                min-height: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .task-summary-add-form {
+                flex-wrap: wrap;
+            }
+            .task-summary-add-form input {
+                min-height: 44px;
+                font-size: 16px;
+            }
+            .task-summary-add-form select {
+                min-height: 44px;
+                padding: 10px 12px;
+            }
+            .task-summary-add-form button {
+                padding: 12px 16px;
+                min-height: 44px;
+            }
+            .task-summary-item .task-delete-btn,
+            .task-summary-item .task-unassign-btn {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 10px;
+                font-size: 18px;
+            }
+            .tasks-summary-done-toggle {
+                padding: 10px 0;
+                font-size: 12px;
+                min-height: 44px;
+                align-items: center;
+            }
+
+            /* Roadmap on mobile */
+            .roadmap-view {
+                padding: 16px;
+            }
+            .roadmap-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .roadmap-left {
+                order: 1;
+            }
+            .roadmap-visual-section {
+                order: 2;
+                padding: 20px 16px;
+                min-height: 220px;
+            }
+            .roadmap-project-select {
+                padding: 14px 16px;
+                font-size: 16px;
+                min-height: 48px;
+            }
+            .roadmap-section {
+                padding: 14px;
+            }
+            .roadmap-section.steps-section {
+                min-height: 180px;
+            }
+            .roadmap-step-row {
+                padding: 12px 10px;
+                flex-wrap: wrap;
+            }
+            .roadmap-step-checkbox {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+            }
+            .roadmap-step-text {
+                font-size: 16px;
+                flex: 1;
+                min-width: 0;
+            }
+            .roadmap-add-step {
+                padding: 14px;
+                min-height: 48px;
+                font-size: 15px;
+            }
+            .roadmap-path-nodes {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 16px;
+            }
+            .roadmap-path-node {
+                max-width: 140px;
+            }
+            .roadmap-path-node-dot {
+                width: 32px;
+                height: 32px;
+                font-size: 12px;
+            }
+            .roadmap-path-node-text {
+                font-size: 12px;
+                margin-top: 8px;
+            }
+            .roadmap-path-track,
+            .roadmap-path-track-done {
+                display: none;
+            }
+
+            /* Access gate on mobile */
+            .access-gate {
+                padding: 20px 16px;
+                justify-content: safe center;
+            }
+            .access-gate h1 {
+                font-size: 22px;
+                text-align: center;
+            }
+            .access-gate p {
+                font-size: 14px;
+                text-align: center;
+            }
+            .access-gate form {
+                max-width: 100%;
+            }
+            .access-gate input {
+                padding: 16px 18px;
+                font-size: 16px;
+                min-height: 52px;
+            }
+            .access-gate button {
+                padding: 16px;
+                font-size: 16px;
+                min-height: 52px;
+            }
+
+            /* Loading overlay */
+            .loading-text {
+                font-size: 13px;
+                padding: 0 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-left h1 {
+                font-size: 16px;
+            }
+            .column {
+                min-width: 260px;
+                max-width: 260px;
+            }
+            .modal {
+                max-height: 95vh;
+            }
+            .tasks-summary-column h3 {
+                font-size: 13px;
+            }
+        }
+
+        /* Safe area for notched devices */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            .modal {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            .board {
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
+            .main-nav {
+                padding-left: max(12px, env(safe-area-inset-left));
+                padding-right: max(12px, env(safe-area-inset-right));
+            }
+            .header {
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="access-gate" id="access-gate">
+        <h1>🎯 Incubadora de Ideas</h1>
+        <p>Log in with your account</p>
+        <p class="access-gate-hint">Access is restricted. Only pre-registered accounts can sign in.</p>
+        <form id="auth-form">
+            <input type="email" id="auth-email" placeholder="Email" autocomplete="email" required>
+            <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" required>
+            <button type="submit" id="auth-submit">Log in</button>
+            <p class="error" id="auth-error"></p>
+        </form>
+    </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Connecting to Firebase...</p>
+    </div>
+
+    <div class="app" id="app-main" style="display: none;">
+        <header class="header">
+            <div class="header-left">
+                <h1>🎯 Incubadora de Ideas</h1>
+                <p class="subtitle">Organize and prioritize your projects</p>
+            </div>
+            <div class="header-right">
+                <div class="sync-status">
+                    <div class="sync-dot" id="sync-dot"></div>
+                    <span id="sync-text">Offline</span>
+                </div>
+                <button type="button" class="logout-btn" id="logout-access-btn" title="Log out">Log out</button>
+            </div>
+        </header>
+
+        <nav class="main-nav">
+            <button type="button" class="main-nav-btn active" id="nav-projects" data-view="projects">Projects</button>
+            <button type="button" class="main-nav-btn" id="nav-tasks" data-view="tasks">Tasks</button>
+            <button type="button" class="main-nav-btn" id="nav-roadmap" data-view="roadmap">Roadmap</button>
+        </nav>
+
+        <div id="view-projects" class="app-view active">
+            <div class="board" id="board"></div>
+        </div>
+
+        <div id="view-roadmap" class="app-view">
+            <div class="roadmap-view">
+                <div class="roadmap-project-select-wrap">
+                    <label for="roadmap-project-select">Project</label>
+                    <select id="roadmap-project-select" class="roadmap-project-select">
+                        <option value="">— Select a project —</option>
+                    </select>
+                </div>
+                <div id="roadmap-empty" class="roadmap-empty">
+                    Choose a project above to see and edit its roadmap.
+                </div>
+                <div id="roadmap-content" class="roadmap-layout" style="display: none;">
+                    <div class="roadmap-left">
+                        <div class="roadmap-section steps-section">
+                            <h3>Steps to complete</h3>
+                            <p class="roadmap-hint">Define the steps to reach your goal. Check them off as you go — the path on the right updates as you progress.</p>
+                            <div id="roadmap-steps-list" class="roadmap-steps-list"></div>
+                            <button type="button" class="roadmap-add-step" id="roadmap-add-step">+ Add step</button>
+                        </div>
+                    </div>
+                    <div class="roadmap-visual-section">
+                        <h3>Your path</h3>
+                        <p class="roadmap-journey-label">The road you’re traveling — each step brings you closer.</p>
+                        <div id="roadmap-progress-wrap" class="roadmap-progress-bar">
+                            <div id="roadmap-progress-fill" class="roadmap-progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div id="roadmap-timeline" class="roadmap-path"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-tasks" class="app-view">
+            <div class="tasks-summary" id="tasks-summary">
+                <h2>Task summary</h2>
+                <div class="tasks-summary-grid">
+                    <div class="tasks-summary-column">
+                        <h3>Team <button type="button" class="task-summary-add-btn" id="add-task-team-btn" title="Add team task">+</button></h3>
+                        <div id="tasks-team"></div>
+                        <div class="task-summary-add-form" id="add-form-team">
+                            <input type="text" id="add-task-team-input" placeholder="Task description...">
+                            <select id="add-task-team-assignee">
+                                <option value="Mildred">Mildred</option>
+                                <option value="Diana">Diana</option>
+                            </select>
+                            <button type="button" id="add-task-team-submit">Add</button>
+                        </div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-team-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-team-done-list" class="tasks-summary-done-list"></div>
+                        </div>
+                    </div>
+                    <div class="tasks-summary-column">
+                        <h3>Mildred <button type="button" class="task-summary-add-btn" id="add-task-mildred-btn" title="Add personal task">+</button></h3>
+                        <div id="tasks-mildred"></div>
+                        <div class="task-summary-add-form" id="add-form-mildred">
+                            <input type="text" id="add-task-mildred-input" placeholder="Task description...">
+                            <button type="button" id="add-task-mildred-submit">Add</button>
+                        </div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-mildred-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-mildred-done-list" class="tasks-summary-done-list"></div>
+                        </div>
+                    </div>
+                    <div class="tasks-summary-column">
+                        <h3>Diana <button type="button" class="task-summary-add-btn" id="add-task-diana-btn" title="Add personal task">+</button></h3>
+                        <div id="tasks-diana"></div>
+                        <div class="task-summary-add-form" id="add-form-diana">
+                            <input type="text" id="add-task-diana-input" placeholder="Task description...">
+                            <button type="button" id="add-task-diana-submit">Add</button>
+                        </div>
+                        <div class="tasks-summary-done-section">
+                            <button type="button" class="tasks-summary-done-toggle" id="tasks-diana-done-toggle" style="display:none">Done (0) <span class="tasks-summary-done-arrow">▶</span></button>
+                            <div id="tasks-diana-done-list" class="tasks-summary-done-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-backdrop">
+        <div class="modal">
+            <div class="modal-header">
+                <input type="text" class="modal-title-input" id="modal-title" placeholder="Project name">
+                <button class="close-btn" id="close-modal">×</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-section">
+                    <label>Project type</label>
+                    <select class="select-input" id="modal-project-type">
+                        <option value="individual">Individual</option>
+                        <option value="team">Team</option>
+                    </select>
+                    <span class="form-hint">Individual → Mildred/Diana columns. Team → Team column with M/D badge.</span>
+                </div>
+                <div class="form-section">
+                    <label>Project Manager</label>
+                    <select class="select-input" id="modal-pm">
+                        <option value="">— Select —</option>
+                        <option value="Mildred">Mildred</option>
+                        <option value="Diana">Diana</option>
+                    </select>
+                </div>
+                <div class="form-section">
+                    <label>Status</label>
+                    <select class="select-input" id="modal-column"></select>
+                </div>
+
+                <div class="form-section" id="modal-scores-section">
+                    <label>Score (1–4)</label>
+                    <div id="modal-scores-rows"></div>
+                    <div class="score-average-row">
+                        <span class="score-average-value" id="modal-score-average">2.0</span>
+                        <span style="color: rgba(255,255,255,0.5); font-size: 13px;">Average</span>
+                        <div class="score-bar-4" id="modal-score-average-bar"></div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <label>Description</label>
+                    <textarea id="modal-description" placeholder="What is this project about?" rows="3"></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label>Target / Objective</label>
+                    <textarea id="modal-target" placeholder="What is the main goal?" rows="2"></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label>Scope</label>
+                    <textarea id="modal-scope" placeholder="What is in scope and out of scope?" rows="2"></textarea>
+                </div>
+
+                <div class="form-section">
+                    <label>Risks</label>
+                    <textarea id="modal-risks" placeholder="What could go wrong?" rows="2"></textarea>
+                </div>
+
+                <div class="checklists-section">
+                    <div class="checklists-header">
+                        <label>Checklists</label>
+                        <button class="add-checklist-btn" id="add-checklist-btn">+ Add checklist</button>
+                    </div>
+                    <div id="checklists-container"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="delete-btn" id="delete-card">🗑️ Delete card</button>
+                <span class="created-date" id="created-date"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYzLRS1shHpf4t4fDS_BkXLGKcyvXrbbQ",
+            authDomain: "dashboard-1cec5.firebaseapp.com",
+            databaseURL: "https://dashboard-1cec5-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "dashboard-1cec5",
+            storageBucket: "dashboard-1cec5.firebasestorage.app",
+            messagingSenderId: "449959469735",
+            appId: "1:449959469735:web:bf1096143a2d316d777182",
+            measurementId: "G-PXHECZSBTD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        const cardsRef = database.ref('cards');
+        const generalTasksRef = database.ref('generalTasks');
+
+        const COLUMNS = [
+            { id: 'ideas', title: '💡 Ideas', color: '#8b5cf6' },
+            { id: 'exploring', title: '🔍 Exploring', color: '#3b82f6' },
+            { id: 'in-progress', title: '🚀 In Progress', color: '#f59e0b' },
+            { id: 'review', title: '👀 In Review', color: '#ec4899' },
+            { id: 'done', title: '✅ Done', color: '#10b981' },
+        ];
+
+        const SCORE_CRITERIA = [
+            { key: 'mercado', label: '📈 Market' },
+            { key: 'dificultadTecnica', label: '⚙️ Technical difficulty' },
+            { key: 'tiempoDedicacion', label: '⏱ Time commitment' },
+            { key: 'potencialMonetizacion', label: '💰 Monetization potential' },
+        ];
+        const SCORE_BAR_COLORS = ['#6b7280', '#3b82f6', '#8b5cf6', '#10b981'];
+        const DEFAULT_SCORES = { mercado: 2, dificultadTecnica: 2, tiempoDedicacion: 2, potencialMonetizacion: 2 };
+        const ASSIGNEES = ['Mildred', 'Diana'];
+        const TASK_STATUSES = [
+            { id: 'todo', label: 'TO DO' },
+            { id: 'in_progress', label: 'IN PROGRESS' },
+            { id: 'done', label: 'DONE' },
+        ];
+        const STATUS_LABELS = { todo: 'TO DO', in_progress: 'IN PROGRESS', done: 'DONE' };
+        const STATUS_ORDER = ['todo', 'in_progress', 'done'];
+
+        let cards = [];
+        let generalTasks = [];
+        let selectedCardId = null;
+        let cardsListenerInitialized = false;
+
+        function updateSyncStatus(status) {
+            const dot = document.getElementById('sync-dot');
+            const text = document.getElementById('sync-text');
+            
+            dot.className = 'sync-dot';
+            
+            if (status === 'connected') {
+                dot.classList.remove('offline', 'syncing');
+                text.textContent = 'Connected';
+            } else if (status === 'syncing') {
+                dot.classList.add('syncing');
+                text.textContent = 'Syncing...';
+            } else {
+                dot.classList.add('offline');
+                text.textContent = 'Offline';
+            }
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        function showLoading(message) {
+            const overlay = document.getElementById('loading-overlay');
+            const textEl = document.querySelector('.loading-text');
+            if (message) textEl.textContent = message;
+            overlay.classList.remove('hidden');
+        }
+
+        function initCardsListener() {
+            if (cardsListenerInitialized) return;
+            cardsListenerInitialized = true;
+
+            cardsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                cards = data ? Object.values(data) : [];
+                cards.forEach(c => { if (!c.roadmapSteps) c.roadmapSteps = []; });
+                renderBoard();
+                if (document.getElementById('view-roadmap') && document.getElementById('view-roadmap').classList.contains('active')) {
+                    renderRoadmapView();
+                }
+                hideLoading();
+                updateSyncStatus('connected');
+            }, (error) => {
+                console.error('Firebase error:', error);
+                updateSyncStatus('offline');
+                hideLoading();
+            });
+
+            generalTasksRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                generalTasks = data ? Object.values(data) : [];
+                renderTasksSummary();
+            });
+        }
+
+        let selectedRoadmapCardId = null;
+        let roadmapDebounceTimer = null;
+
+        function initMainNav() {
+            const btnProjects = document.getElementById('nav-projects');
+            const btnTasks = document.getElementById('nav-tasks');
+            const btnRoadmap = document.getElementById('nav-roadmap');
+            const viewProjects = document.getElementById('view-projects');
+            const viewTasks = document.getElementById('view-tasks');
+            const viewRoadmap = document.getElementById('view-roadmap');
+            if (!btnProjects || !btnTasks || !viewProjects || !viewTasks) return;
+            function showProjects() {
+                btnProjects.classList.add('active');
+                btnTasks.classList.remove('active');
+                if (btnRoadmap) btnRoadmap.classList.remove('active');
+                viewProjects.classList.add('active');
+                viewTasks.classList.remove('active');
+                if (viewRoadmap) viewRoadmap.classList.remove('active');
+            }
+            function showTasks() {
+                btnTasks.classList.add('active');
+                btnProjects.classList.remove('active');
+                if (btnRoadmap) btnRoadmap.classList.remove('active');
+                viewTasks.classList.add('active');
+                viewProjects.classList.remove('active');
+                if (viewRoadmap) viewRoadmap.classList.remove('active');
+            }
+            function showRoadmap() {
+                if (btnRoadmap) btnRoadmap.classList.add('active');
+                btnProjects.classList.remove('active');
+                btnTasks.classList.remove('active');
+                if (viewRoadmap) viewRoadmap.classList.add('active');
+                viewProjects.classList.remove('active');
+                viewTasks.classList.remove('active');
+                renderRoadmapView();
+            }
+            btnProjects.addEventListener('click', showProjects);
+            btnTasks.addEventListener('click', showTasks);
+            if (btnRoadmap) btnRoadmap.addEventListener('click', showRoadmap);
+        }
+
+        function getRoadmapSteps(card) {
+            if (!card.roadmapSteps || !Array.isArray(card.roadmapSteps)) return [];
+            return card.roadmapSteps;
+        }
+
+        function renderRoadmapView() {
+            const selectEl = document.getElementById('roadmap-project-select');
+            const emptyEl = document.getElementById('roadmap-empty');
+            const contentEl = document.getElementById('roadmap-content');
+            if (!selectEl || !emptyEl || !contentEl) return;
+
+            const currentValue = selectEl.value;
+            selectEl.innerHTML = '<option value="">— Select a project —</option>';
+            cards.forEach(card => {
+                const opt = document.createElement('option');
+                opt.value = card.id;
+                opt.textContent = (card.title || 'Untitled').trim() || 'Untitled';
+                selectEl.appendChild(opt);
+            });
+
+            if (selectedRoadmapCardId && cards.some(c => c.id === selectedRoadmapCardId)) {
+                selectEl.value = selectedRoadmapCardId;
+                emptyEl.style.display = 'none';
+                contentEl.style.display = 'block';
+                renderRoadmapStepsList();
+                renderRoadmapTimeline();
+            } else {
+                selectedRoadmapCardId = null;
+                selectEl.value = '';
+                emptyEl.style.display = 'block';
+                contentEl.style.display = 'none';
+            }
+        }
+
+        function getSelectedRoadmapCard() {
+            if (!selectedRoadmapCardId) return null;
+            const card = cards.find(c => c.id === selectedRoadmapCardId);
+            return card || null;
+        }
+
+        function renderRoadmapStepsList() {
+            const card = getSelectedRoadmapCard();
+            const listEl = document.getElementById('roadmap-steps-list');
+            if (!card || !listEl) return;
+
+            if (!card.roadmapSteps) card.roadmapSteps = [];
+            const steps = card.roadmapSteps;
+
+            listEl.innerHTML = '';
+            steps.forEach((step, index) => {
+                const row = document.createElement('div');
+                row.className = 'roadmap-step-row' + (step.checked ? ' checked' : '');
+                row.dataset.stepId = step.id;
+
+                const checkbox = document.createElement('div');
+                checkbox.className = 'roadmap-step-checkbox';
+                checkbox.setAttribute('role', 'button');
+                checkbox.tabIndex = 0;
+                checkbox.addEventListener('click', () => {
+                    step.checked = !step.checked;
+                    saveCard(card);
+                    renderRoadmapStepsList();
+                    renderRoadmapTimeline();
+                });
+                checkbox.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); checkbox.click(); } });
+
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.className = 'roadmap-step-text';
+                textInput.value = step.text || '';
+                textInput.placeholder = 'Step ' + (index + 1);
+                textInput.addEventListener('input', () => {
+                    clearTimeout(roadmapDebounceTimer);
+                    roadmapDebounceTimer = setTimeout(() => {
+                        step.text = textInput.value.trim();
+                        saveCard(card);
+                        renderRoadmapTimeline();
+                    }, 400);
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'roadmap-step-delete';
+                deleteBtn.textContent = '×';
+                deleteBtn.title = 'Remove step';
+                deleteBtn.addEventListener('click', () => {
+                    card.roadmapSteps = card.roadmapSteps.filter(s => s.id !== step.id);
+                    saveCard(card);
+                    renderRoadmapStepsList();
+                    renderRoadmapTimeline();
+                });
+
+                row.appendChild(checkbox);
+                row.appendChild(textInput);
+                row.appendChild(deleteBtn);
+                listEl.appendChild(row);
+            });
+        }
+
+        function renderRoadmapTimeline() {
+            const card = getSelectedRoadmapCard();
+            const pathEl = document.getElementById('roadmap-timeline');
+            const progressFill = document.getElementById('roadmap-progress-fill');
+            if (!card || !pathEl) return;
+
+            const steps = getRoadmapSteps(card);
+            const doneCount = steps.filter(s => s.checked).length;
+            const total = steps.length;
+            const percent = total ? Math.round((doneCount / total) * 100) : 0;
+
+            if (progressFill) progressFill.style.width = percent + '%';
+
+            pathEl.innerHTML = '';
+
+            if (steps.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'roadmap-path-empty';
+                empty.textContent = 'Add steps on the left to see your path here. Each step you complete will light up the road.';
+                pathEl.appendChild(empty);
+                return;
+            }
+
+            const track = document.createElement('div');
+            track.className = 'roadmap-path-track';
+            pathEl.appendChild(track);
+
+            const trackDone = document.createElement('div');
+            trackDone.className = 'roadmap-path-track-done';
+            trackDone.style.width = percent + '%';
+            pathEl.appendChild(trackDone);
+
+            const nodesWrap = document.createElement('div');
+            nodesWrap.className = 'roadmap-path-nodes';
+
+            steps.forEach((step, index) => {
+                const isDone = step.checked;
+                const isCurrent = !isDone && steps.slice(0, index).every(s => s.checked);
+                const node = document.createElement('div');
+                node.className = 'roadmap-path-node' + (isDone ? ' done' : '') + (isCurrent ? ' current' : '');
+
+                const dot = document.createElement('div');
+                dot.className = 'roadmap-path-node-dot';
+                const numSpan = document.createElement('span');
+                numSpan.textContent = index + 1;
+                dot.appendChild(numSpan);
+
+                const textEl = document.createElement('div');
+                textEl.className = 'roadmap-path-node-text';
+                textEl.textContent = (step.text || '').trim() || 'Step ' + (index + 1);
+
+                const badge = document.createElement('div');
+                badge.className = 'roadmap-path-node-badge';
+                badge.textContent = isDone ? 'Done' : (isCurrent ? 'Current' : 'Upcoming');
+
+                node.appendChild(dot);
+                node.appendChild(textEl);
+                node.appendChild(badge);
+                nodesWrap.appendChild(node);
+            });
+
+            pathEl.appendChild(nodesWrap);
+        }
+
+        function initRoadmap() {
+            const selectEl = document.getElementById('roadmap-project-select');
+            const emptyEl = document.getElementById('roadmap-empty');
+            const contentEl = document.getElementById('roadmap-content');
+            const addStepBtn = document.getElementById('roadmap-add-step');
+
+            if (selectEl && emptyEl && contentEl) {
+                selectEl.addEventListener('change', () => {
+                    selectedRoadmapCardId = selectEl.value || null;
+                    if (!selectedRoadmapCardId) {
+                        emptyEl.style.display = 'block';
+                        contentEl.style.display = 'none';
+                        return;
+                    }
+                    emptyEl.style.display = 'none';
+                    contentEl.style.display = 'block';
+                    renderRoadmapStepsList();
+                    renderRoadmapTimeline();
+                });
+            }
+
+            if (addStepBtn) {
+                addStepBtn.addEventListener('click', () => {
+                    const card = getSelectedRoadmapCard();
+                    if (!card) return;
+                    if (!card.roadmapSteps) card.roadmapSteps = [];
+                    card.roadmapSteps.push({
+                        id: Date.now().toString(),
+                        text: '',
+                        checked: false,
+                    });
+                    saveCard(card);
+                    renderRoadmapStepsList();
+                    renderRoadmapTimeline();
+                });
+            }
+        }
+
+        function showApp() {
+            document.getElementById('access-gate').classList.add('hidden');
+            document.getElementById('app-main').style.display = 'flex';
+            document.getElementById('app-main').style.flexDirection = 'column';
+            showLoading('Loading...');
+            initMainNav();
+            initCardsListener();
+        }
+
+        function showLogin() {
+            document.getElementById('access-gate').classList.remove('hidden');
+            document.getElementById('app-main').style.display = 'none';
+            document.getElementById('auth-error').textContent = '';
+            hideLoading();
+        }
+
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                showApp();
+            } else {
+                showLogin();
+            }
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = (document.getElementById('auth-email').value || '').trim();
+            const password = document.getElementById('auth-password').value || '';
+            const errorEl = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-submit');
+            if (!email || !password) {
+                errorEl.textContent = 'Enter email and password.';
+                return;
+            }
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+            auth.signInWithEmailAndPassword(email, password)
+                .then(function() {
+                    errorEl.textContent = '';
+                })
+                .catch(function(err) {
+                    if (err.code === 'auth/user-not-found') errorEl.textContent = 'No account with this email.';
+                    else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') errorEl.textContent = 'Wrong password.';
+                    else if (err.code === 'auth/invalid-email') errorEl.textContent = 'Invalid email.';
+                    else errorEl.textContent = err.message || 'Login failed. Try again.';
+                })
+                .finally(function() {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Log in';
+                });
+        });
+
+        document.getElementById('logout-access-btn').addEventListener('click', function() {
+            auth.signOut();
+        });
+
+        // Monitor connection state
+        database.ref('.info/connected').on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                updateSyncStatus('connected');
+            } else {
+                updateSyncStatus('offline');
+            }
+        });
+
+        function saveCard(card) {
+            updateSyncStatus('syncing');
+            cardsRef.child(card.id).set(card)
+                .then(() => updateSyncStatus('connected'))
+                .catch((error) => {
+                    console.error('Error saving card:', error);
+                    updateSyncStatus('offline');
+                });
+        }
+
+        function deleteCardFromDB(cardId) {
+            updateSyncStatus('syncing');
+            cardsRef.child(cardId).remove()
+                .then(() => updateSyncStatus('connected'))
+                .catch((error) => {
+                    console.error('Error deleting card:', error);
+                    updateSyncStatus('offline');
+                });
+        }
+
+        function saveGeneralTask(task) {
+            updateSyncStatus('syncing');
+            generalTasksRef.child(task.id).set(task)
+                .then(() => updateSyncStatus('connected'))
+                .catch((error) => {
+                    console.error('Error saving general task:', error);
+                    updateSyncStatus('offline');
+                });
+        }
+
+        function deleteGeneralTask(taskId) {
+            updateSyncStatus('syncing');
+            generalTasksRef.child(taskId).remove()
+                .then(() => updateSyncStatus('connected'))
+                .catch((error) => {
+                    console.error('Error deleting general task:', error);
+                    updateSyncStatus('offline');
+                });
+        }
+
+        function getScores(card) {
+            if (!card.scores) return { ...DEFAULT_SCORES };
+            return {
+                mercado: card.scores.mercado ?? 2,
+                dificultadTecnica: card.scores.dificultadTecnica ?? 2,
+                tiempoDedicacion: card.scores.tiempoDedicacion ?? 2,
+                potencialMonetizacion: card.scores.potencialMonetizacion ?? 2,
+            };
+        }
+
+        function getScoreAverage(cardOrScores) {
+            const s = cardOrScores && (cardOrScores.mercado != null) ? cardOrScores : getScores(cardOrScores || {});
+            const sum = s.mercado + s.dificultadTecnica + s.tiempoDedicacion + s.potencialMonetizacion;
+            return Math.round((sum / 4) * 10) / 10;
+        }
+
+        function createScoreBar4(value, interactive, onChange) {
+            const bar = document.createElement('div');
+            bar.className = 'score-bar-4' + (interactive ? ' interactive' : '');
+            const filled = Math.round(Math.max(0, Math.min(4, value)));
+            for (let i = 1; i <= 4; i++) {
+                const seg = document.createElement('div');
+                seg.className = 'score-segment';
+                seg.style.backgroundColor = i <= filled ? SCORE_BAR_COLORS[i - 1] : 'rgba(255, 255, 255, 0.1)';
+                if (interactive) {
+                    seg.dataset.level = i;
+                    seg.title = `${i}/4`;
+                    seg.addEventListener('click', () => onChange && onChange(i));
+                }
+                bar.appendChild(seg);
+            }
+            return bar;
+        }
+
+        function getTeamTasks() {
+            const list = [];
+            cards.forEach(card => {
+                if ((card.projectType || 'individual') !== 'team') return;
+                (card.checklists || []).forEach((checklist) => {
+                    (checklist.items || []).forEach((item) => {
+                        if (item.assignee === 'Mildred' || item.assignee === 'Diana') {
+                            list.push({ type: 'card', card, item, cardId: card.id });
+                        }
+                    });
+                });
+            });
+            (generalTasks || []).forEach(task => {
+                if (task.isTeam) list.push({ type: 'general', task });
+            });
+            return list;
+        }
+
+        function getTasksByAssignee() {
+            const mildred = [];
+            const diana = [];
+            cards.forEach(card => {
+                if ((card.projectType || 'individual') !== 'individual') return;
+                (card.checklists || []).forEach((checklist) => {
+                    (checklist.items || []).forEach((item) => {
+                        if (item.assignee === 'Mildred') mildred.push({ type: 'card', card, item, cardId: card.id });
+                        if (item.assignee === 'Diana') diana.push({ type: 'card', card, item, cardId: card.id });
+                    });
+                });
+            });
+            (generalTasks || []).forEach(task => {
+                if (task.isTeam) return;
+                if (task.assignee === 'Mildred') mildred.push({ type: 'general', task });
+                if (task.assignee === 'Diana') diana.push({ type: 'general', task });
+            });
+            return { mildred, diana };
+        }
+
+        function cycleStatus(current) {
+            const i = STATUS_ORDER.indexOf(current || 'todo');
+            return STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
+        }
+
+        function renderTasksSummary() {
+            const teamList = getTeamTasks();
+            const teamActive = teamList.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const teamDone = teamList.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+            const { mildred, diana } = getTasksByAssignee();
+            const mildredActive = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const mildredDone = mildred.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+            const dianaActive = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) !== 'done');
+            const dianaDone = diana.filter(e => (e.type === 'card' ? e.item.status : e.task.status) === 'done');
+
+            function setupStatusSelect(entry, status, div) {
+                const sel = div.querySelector('.task-status-select');
+                if (!sel) return;
+                sel.value = status || 'todo';
+                sel.className = 'task-status-select ' + (status || 'todo');
+                sel.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const newStatus = sel.value;
+                    if (entry.type === 'card') {
+                        entry.item.status = newStatus;
+                        saveCard(entry.card);
+                    } else {
+                        entry.task.status = newStatus;
+                        saveGeneralTask(entry.task);
+                    }
+                    renderTasksSummary();
+                });
+                sel.addEventListener('click', (e) => e.stopPropagation());
+            }
+
+            function assigneeBadge(entry) {
+                let assignee = null;
+                if (entry.type === 'card' && entry.item.assignee) assignee = entry.item.assignee;
+                if (entry.type === 'general' && entry.task.isTeam && entry.task.assignee) assignee = entry.task.assignee;
+                if (!assignee) return '';
+                const c = assignee === 'Mildred' ? 'm' : 'd';
+                const l = assignee === 'Mildred' ? 'M' : 'D';
+                return `<span class="task-assignee-badge ${c}">${l}</span>`;
+            }
+
+            function renderColumn(containerId, doneContainerId, doneToggleId, activeList, doneList, showAssigneeBadge) {
+                const el = document.getElementById(containerId);
+                const doneEl = document.getElementById(doneContainerId);
+                const toggleEl = document.getElementById(doneToggleId);
+                if (!el) return;
+                el.innerHTML = '';
+                activeList.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'task-summary-item' + (entry.type === 'general' ? ' general' : '');
+                    const status = entry.type === 'card' ? (entry.item.status || 'todo') : (entry.task.status || 'todo');
+                    const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
+                    const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
+                    const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
+                    const titleEsc = (title || '').replace(/"/g, '&quot;');
+                    const textEsc = (text || '').replace(/"/g, '&quot;');
+                    const ab = showAssigneeBadge ? assigneeBadge(entry) : '';
+                    const statusOptions = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
+                    if (entry.type === 'card') {
+                        div.innerHTML = `
+                            <span class="task-card-title" title="${titleEsc}">${titleShort}</span>
+                            <span class="task-text" title="${textEsc}">${text}</span>
+                            ${ab}
+                            <select class="task-status-select ${status}" title="Change status">${statusOptions}</select>
+                            <button type="button" class="task-unassign-btn" title="Remove from assignment (stays in card)">×</button>
+                        `;
+                        div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-delete-btn') && !e.target.classList.contains('task-unassign-btn') && !e.target.classList.contains('task-status-select') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                        div.querySelector('.task-unassign-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            entry.item.assignee = '';
+                            saveCard(entry.card);
+                            renderTasksSummary();
+                        });
+                    } else {
+                        const abGeneral = showAssigneeBadge ? assigneeBadge(entry) : '';
+                        div.innerHTML = `
+                            <span class="task-card-title">General</span>
+                            <span class="task-text" title="${textEsc}">${text}</span>
+                            ${abGeneral}
+                            <select class="task-status-select ${status}" title="Change status">${statusOptions}</select>
+                            <button type="button" class="task-delete-btn" title="Delete">×</button>
+                        `;
+                        div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
+                    }
+                    setupStatusSelect(entry, status, div);
+                    el.appendChild(div);
+                });
+                if (activeList.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'tasks-summary-empty';
+                    empty.textContent = 'No tasks assigned';
+                    el.appendChild(empty);
+                }
+
+                if (doneEl && toggleEl) {
+                    const wasExpanded = doneEl.classList.contains('visible');
+                    doneEl.innerHTML = '';
+                    doneEl.classList.remove('visible');
+                    if (doneList.length > 0) {
+                        const arrow = wasExpanded ? '▼' : '▶';
+                        toggleEl.innerHTML = `Done (${doneList.length}) <span class="tasks-summary-done-arrow">${arrow}</span>`;
+                        toggleEl.style.display = 'flex';
+                        if (wasExpanded) {
+                            doneEl.classList.add('visible');
+                            toggleEl.classList.add('expanded');
+                        }
+                        doneList.forEach(entry => {
+                            const div = document.createElement('div');
+                            div.className = 'task-summary-item done-item' + (entry.type === 'general' ? ' general' : '');
+                            const status = entry.type === 'card' ? (entry.item.status || 'done') : (entry.task.status || 'done');
+                            const text = entry.type === 'card' ? (entry.item.text || '—') : (entry.task.text || '—');
+                            const title = entry.type === 'card' ? (entry.card.title || 'Untitled') : 'General';
+                            const titleShort = title.length > 18 ? title.substring(0, 18) + '…' : title;
+                            const abDone = showAssigneeBadge ? assigneeBadge(entry) : '';
+                            const statusOptionsDone = STATUS_ORDER.map(s => `<option value="${s}">${STATUS_LABELS[s]}</option>`).join('');
+                            if (entry.type === 'card') {
+                                div.innerHTML = `
+                                    <span class="task-card-title">${titleShort}</span>
+                                    <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                    ${abDone}
+                                    <select class="task-status-select done">${statusOptionsDone}</select>
+                                    <button type="button" class="task-unassign-btn" title="Remove from assignment (stays in card)">×</button>
+                                `;
+                                div.addEventListener('click', (e) => { if (!e.target.classList.contains('task-unassign-btn') && !e.target.classList.contains('task-status-select') && !e.target.classList.contains('task-assignee-badge')) openModal(entry.cardId); });
+                                div.querySelector('.task-unassign-btn').addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    entry.item.assignee = '';
+                                    saveCard(entry.card);
+                                    renderTasksSummary();
+                                });
+                            } else {
+                                div.innerHTML = `
+                                    <span class="task-card-title">${titleShort}</span>
+                                    <span class="task-text">${(text || '—').replace(/</g, '&lt;')}</span>
+                                    ${abDone}
+                                    <select class="task-status-select done">${statusOptionsDone}</select>
+                                    <button type="button" class="task-delete-btn" title="Delete">×</button>
+                                `;
+                                div.querySelector('.task-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteGeneralTask(entry.task.id); });
+                            }
+                            setupStatusSelect(entry, status, div);
+                            const sel = div.querySelector('.task-status-select');
+                            if (sel) sel.value = status;
+                            doneEl.appendChild(div);
+                        });
+                    } else {
+                        toggleEl.style.display = 'none';
+                    }
+                }
+            }
+
+            renderColumn('tasks-team', 'tasks-team-done-list', 'tasks-team-done-toggle', teamActive, teamDone, true);
+            renderColumn('tasks-mildred', 'tasks-mildred-done-list', 'tasks-mildred-done-toggle', mildredActive, mildredDone, false);
+            renderColumn('tasks-diana', 'tasks-diana-done-list', 'tasks-diana-done-toggle', dianaActive, dianaDone, false);
+
+            ['team', 'mildred', 'diana'].forEach(name => {
+                const toggle = document.getElementById('tasks-' + name + '-done-toggle');
+                const list = document.getElementById('tasks-' + name + '-done-list');
+                if (toggle && list) {
+                    toggle.onclick = () => {
+                        list.classList.toggle('visible');
+                        toggle.classList.toggle('expanded');
+                        const arrow = toggle.querySelector('.tasks-summary-done-arrow');
+                        if (arrow) arrow.textContent = list.classList.contains('visible') ? '▼' : '▶';
+                    };
+                }
+            });
+        }
+
+        function setupGeneralTaskAdd(assignee) {
+            const btn = document.getElementById('add-task-' + assignee.toLowerCase() + '-btn');
+            const form = document.getElementById('add-form-' + assignee.toLowerCase());
+            const input = document.getElementById('add-task-' + assignee.toLowerCase() + '-input');
+            const submit = document.getElementById('add-task-' + assignee.toLowerCase() + '-submit');
+            if (!btn || !form || !input || !submit) return;
+            btn.addEventListener('click', () => {
+                form.classList.toggle('visible');
+                if (form.classList.contains('visible')) input.focus();
+            });
+            function addTask() {
+                const text = (input.value || '').trim();
+                if (!text) return;
+                const task = {
+                    id: Date.now().toString(),
+                    text,
+                    assignee,
+                    status: 'todo',
+                    createdAt: new Date().toISOString(),
+                };
+                saveGeneralTask(task);
+                input.value = '';
+                form.classList.remove('visible');
+            }
+            submit.addEventListener('click', addTask);
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+        }
+
+        function setupTeamTaskAdd() {
+            const btn = document.getElementById('add-task-team-btn');
+            const form = document.getElementById('add-form-team');
+            const input = document.getElementById('add-task-team-input');
+            const assigneeSelect = document.getElementById('add-task-team-assignee');
+            const submit = document.getElementById('add-task-team-submit');
+            if (!btn || !form || !input || !assigneeSelect || !submit) return;
+            btn.addEventListener('click', () => {
+                form.classList.toggle('visible');
+                if (form.classList.contains('visible')) input.focus();
+            });
+            function addTask() {
+                const text = (input.value || '').trim();
+                if (!text) return;
+                const assignee = assigneeSelect.value || 'Mildred';
+                const task = {
+                    id: Date.now().toString(),
+                    text,
+                    assignee,
+                    status: 'todo',
+                    isTeam: true,
+                    createdAt: new Date().toISOString(),
+                };
+                saveGeneralTask(task);
+                input.value = '';
+                form.classList.remove('visible');
+            }
+            submit.addEventListener('click', addTask);
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addTask(); } });
+        }
+
+        function getChecklistStats(card) {
+            if (!card.checklists || card.checklists.length === 0) return null;
+            
+            let total = 0;
+            let checked = 0;
+            
+            card.checklists.forEach(checklist => {
+                if (checklist.items) {
+                    checklist.items.forEach(item => {
+                        total++;
+                        if (item.checked) checked++;
+                    });
+                }
+            });
+            
+            return { total, checked };
+        }
+
+        function renderCard(card) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
+            cardEl.dataset.id = card.id;
+            
+            const headerRow = document.createElement('div');
+            headerRow.className = 'card-header-row';
+            const title = document.createElement('div');
+            title.className = 'card-title';
+            title.textContent = card.title;
+            headerRow.appendChild(title);
+            const pm = (card.projectManager || '').trim();
+            if (pm === 'Mildred' || pm === 'Diana') {
+                const badge = document.createElement('div');
+                badge.className = 'card-pm-badge ' + (pm === 'Mildred' ? 'm' : 'd');
+                badge.textContent = pm === 'Mildred' ? 'M' : 'D';
+                badge.title = 'Project Manager: ' + pm;
+                headerRow.appendChild(badge);
+            }
+            cardEl.appendChild(headerRow);
+            
+            if (card.description) {
+                const preview = document.createElement('p');
+                preview.className = 'card-preview';
+                preview.textContent = card.description.length > 80 
+                    ? card.description.substring(0, 80) + '...' 
+                    : card.description;
+                cardEl.appendChild(preview);
+            }
+            
+            const footer = document.createElement('div');
+            footer.className = 'card-footer';
+            const scores = getScores(card);
+            const avg = getScoreAverage(scores);
+            footer.appendChild(createScoreBar4(avg, false));
+            const label = document.createElement('span');
+            label.className = 'priority-label';
+            label.textContent = avg.toFixed(1);
+            footer.appendChild(label);
+            cardEl.appendChild(footer);
+
+            const stats = getChecklistStats(card);
+            if (stats && stats.total > 0) {
+                const checklistInfo = document.createElement('div');
+                checklistInfo.className = 'card-checklist-info' + (stats.checked === stats.total ? ' complete' : '');
+                checklistInfo.innerHTML = `☑ ${stats.checked}/${stats.total}`;
+                cardEl.appendChild(checklistInfo);
+            }
+            
+            cardEl.addEventListener('click', () => openModal(card.id));
+
+            cardEl.draggable = true;
+            cardEl.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', card.id);
+                e.dataTransfer.effectAllowed = 'move';
+                cardEl.classList.add('dragging');
+            };
+            cardEl.ondragend = () => cardEl.classList.remove('dragging');
+            
+            return cardEl;
+        }
+
+        function renderColumn(column) {
+            const columnCards = cards
+                .filter(c => c.columnId === column.id)
+                .sort((a, b) => {
+                    const avgA = a.scores ? getScoreAverage(a.scores) : (a.priority != null ? (a.priority / 5) * 4 : 2);
+                    const avgB = b.scores ? getScoreAverage(b.scores) : (b.priority != null ? (b.priority / 5) * 4 : 2);
+                    return avgB - avgA;
+                });
+            
+            const col = document.createElement('div');
+            col.className = 'column';
+            col.dataset.columnId = column.id;
+            
+            const header = document.createElement('div');
+            header.className = 'column-header';
+            header.style.borderColor = column.color;
+            
+            const h2 = document.createElement('h2');
+            h2.textContent = column.title;
+            header.appendChild(h2);
+            
+            const count = document.createElement('span');
+            count.className = 'card-count';
+            count.textContent = columnCards.length;
+            header.appendChild(count);
+            
+            col.appendChild(header);
+            
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'column-cards';
+            cardsContainer.ondragover = (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                col.classList.add('drag-over');
+            };
+            cardsContainer.ondragleave = (e) => {
+                if (!cardsContainer.contains(e.relatedTarget)) col.classList.remove('drag-over');
+            };
+            cardsContainer.ondrop = (e) => {
+                e.preventDefault();
+                col.classList.remove('drag-over');
+                const cardId = e.dataTransfer.getData('text/plain');
+                const card = cards.find(c => c.id === cardId);
+                if (card && card.columnId !== column.id) {
+                    card.columnId = column.id;
+                    saveCard(card);
+                }
+            };
+            columnCards.forEach(card => {
+                cardsContainer.appendChild(renderCard(card));
+            });
+            col.appendChild(cardsContainer);
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-card-btn';
+            addBtn.textContent = '+ Add card';
+            addBtn.addEventListener('click', () => addCard(column.id));
+            col.appendChild(addBtn);
+            
+            return col;
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            COLUMNS.forEach(column => {
+                board.appendChild(renderColumn(column));
+            });
+            renderTasksSummary();
+        }
+
+        function addCard(columnId) {
+            const newCard = {
+                id: Date.now().toString(),
+                columnId,
+                title: 'New Idea',
+                description: '',
+                target: '',
+                scope: '',
+                risks: '',
+                projectType: 'individual',
+                projectManager: '',
+                scores: { ...DEFAULT_SCORES },
+                checklists: [],
+                roadmapSteps: [],
+                createdAt: new Date().toISOString(),
+            };
+            saveCard(newCard);
+            openModal(newCard.id);
+        }
+
+        function renderModalScores(card) {
+            const cardData = cards.find(c => c.id === selectedCardId) || card;
+            if (!cardData) return;
+            const scores = getScores(cardData);
+            if (!cardData.scores) cardData.scores = { ...scores };
+
+            const rowsEl = document.getElementById('modal-scores-rows');
+            rowsEl.innerHTML = '';
+            SCORE_CRITERIA.forEach(({ key, label }) => {
+                const row = document.createElement('div');
+                row.className = 'score-row';
+                const value = scores[key];
+                const bar = createScoreBar4(value, true, (newVal) => {
+                    cardData.scores[key] = newVal;
+                    saveCard(cardData);
+                    renderModalScores(cardData);
+                });
+                row.innerHTML = `<label>${label}</label>`;
+                row.appendChild(bar);
+                rowsEl.appendChild(row);
+            });
+
+            const avg = getScoreAverage(cardData.scores);
+            document.getElementById('modal-score-average').textContent = avg.toFixed(1);
+            const avgBarEl = document.getElementById('modal-score-average-bar');
+            avgBarEl.innerHTML = '';
+            avgBarEl.appendChild(createScoreBar4(avg, false));
+        }
+
+        function renderChecklists(card) {
+            const container = document.getElementById('checklists-container');
+            container.innerHTML = '';
+            
+            if (!card.checklists) card.checklists = [];
+            currentEditingCard = card;
+            
+            card.checklists.forEach((checklist, checklistIndex) => {
+                const checklistEl = document.createElement('div');
+                checklistEl.className = 'checklist';
+                
+                // Header
+                const header = document.createElement('div');
+                header.className = 'checklist-header';
+                
+                const titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'checklist-title-input';
+                titleInput.value = checklist.title || '';
+                titleInput.placeholder = 'Checklist name';
+                titleInput.addEventListener('input', () => {
+                    checklist.title = titleInput.value;
+                    debounceSaveCard();
+                });
+                header.appendChild(titleInput);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-checklist-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.title = 'Delete checklist';
+                deleteBtn.addEventListener('click', () => {
+                    currentEditingCard.checklists.splice(checklistIndex, 1);
+                    saveCard(currentEditingCard);
+                    renderChecklists(currentEditingCard);
+                });
+                header.appendChild(deleteBtn);
+                
+                checklistEl.appendChild(header);
+                
+                // Progress bar
+                const items = checklist.items || [];
+                const checkedCount = items.filter(i => i.checked).length;
+                const totalCount = items.length;
+                const percentage = totalCount > 0 ? (checkedCount / totalCount) * 100 : 0;
+                
+                const progress = document.createElement('div');
+                progress.className = 'checklist-progress';
+                progress.innerHTML = `
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="progress-text">${Math.round(percentage)}%</span>
+                `;
+                checklistEl.appendChild(progress);
+                
+                // Items
+                const itemsContainer = document.createElement('div');
+                itemsContainer.className = 'checklist-items';
+                
+                items.forEach((item, itemIndex) => {
+                    if (item.assignee === undefined) item.assignee = '';
+                    if (item.status === undefined) item.status = 'todo';
+
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'checklist-item' + (item.checked ? ' checked' : '');
+                    
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'item-checkbox' + (item.checked ? ' checked' : '');
+                    checkbox.addEventListener('click', () => {
+                        item.checked = !item.checked;
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(checkbox);
+                    
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.className = 'item-text';
+                    textInput.value = item.text || '';
+                    textInput.placeholder = 'New item...';
+                    textInput.addEventListener('input', () => {
+                        item.text = textInput.value;
+                        debounceSaveCard();
+                    });
+                    itemEl.appendChild(textInput);
+
+                    const assigneeSelect = document.createElement('select');
+                    assigneeSelect.className = 'item-assignee';
+                    assigneeSelect.title = 'Assign to';
+                    const assigneeOpts = ['', ...ASSIGNEES];
+                    assigneeOpts.forEach(name => {
+                        const opt = document.createElement('option');
+                        opt.value = name;
+                        opt.textContent = name || '— Assign —';
+                        if (item.assignee === name) opt.selected = true;
+                        assigneeSelect.appendChild(opt);
+                    });
+                    assigneeSelect.addEventListener('change', () => {
+                        item.assignee = assigneeSelect.value || '';
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(assigneeSelect);
+
+                    const statusSelect = document.createElement('select');
+                    statusSelect.className = 'item-status status-' + (item.status || 'todo');
+                    statusSelect.title = 'Status';
+                    TASK_STATUSES.forEach(({ id, label }) => {
+                        const opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = label;
+                        if ((item.status || 'todo') === id) opt.selected = true;
+                        statusSelect.appendChild(opt);
+                    });
+                    statusSelect.addEventListener('change', () => {
+                        item.status = statusSelect.value;
+                        statusSelect.className = 'item-status status-' + item.status;
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(statusSelect);
+                    
+                    const deleteItemBtn = document.createElement('button');
+                    deleteItemBtn.className = 'delete-item-btn';
+                    deleteItemBtn.innerHTML = '×';
+                    deleteItemBtn.addEventListener('click', () => {
+                        checklist.items.splice(itemIndex, 1);
+                        saveCard(currentEditingCard);
+                        renderChecklists(currentEditingCard);
+                        renderTasksSummary();
+                    });
+                    itemEl.appendChild(deleteItemBtn);
+                    
+                    itemsContainer.appendChild(itemEl);
+                });
+                
+                checklistEl.appendChild(itemsContainer);
+                
+                // Add item button
+                const addItemBtn = document.createElement('button');
+                addItemBtn.className = 'add-item-btn';
+                addItemBtn.innerHTML = '+ Add item';
+                addItemBtn.addEventListener('click', () => {
+                    if (!checklist.items) checklist.items = [];
+                    checklist.items.push({
+                        id: Date.now().toString(),
+                        text: '',
+                        checked: false,
+                        assignee: '',
+                        status: 'todo',
+                    });
+                    saveCard(currentEditingCard);
+                    renderChecklists(currentEditingCard);
+                });
+                checklistEl.appendChild(addItemBtn);
+                
+                container.appendChild(checklistEl);
+            });
+        }
+
+        function openModal(cardId) {
+            const card = cards.find(c => c.id === cardId);
+            if (!card) return;
+            
+            selectedCardId = cardId;
+            
+            document.getElementById('modal-title').value = card.title;
+            document.getElementById('modal-description').value = card.description || '';
+            document.getElementById('modal-target').value = card.target || '';
+            document.getElementById('modal-scope').value = card.scope || '';
+            document.getElementById('modal-risks').value = card.risks || '';
+            const pmSelect = document.getElementById('modal-pm');
+            if (pmSelect) {
+                pmSelect.value = card.projectManager || '';
+            }
+            const projectTypeSelect = document.getElementById('modal-project-type');
+            if (projectTypeSelect) {
+                projectTypeSelect.value = card.projectType || 'individual';
+            }
+
+            const columnSelect = document.getElementById('modal-column');
+            columnSelect.innerHTML = '';
+            COLUMNS.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col.id;
+                option.textContent = col.title;
+                if (col.id === card.columnId) option.selected = true;
+                columnSelect.appendChild(option);
+            });
+
+            renderModalScores(card);
+            renderChecklists(card);
+            
+            const date = new Date(card.createdAt);
+            document.getElementById('created-date').textContent = 
+                `Created: ${date.toLocaleDateString('en-US')}`;
+            
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+            selectedCardId = null;
+            currentEditingCard = null;
+        }
+
+        function updateCard() {
+            const card = cards.find(c => c.id === selectedCardId);
+            if (!card) return;
+            
+            card.title = document.getElementById('modal-title').value || 'Untitled';
+            card.description = document.getElementById('modal-description').value;
+            card.target = document.getElementById('modal-target').value;
+            card.scope = document.getElementById('modal-scope').value;
+            card.risks = document.getElementById('modal-risks').value;
+            card.columnId = document.getElementById('modal-column').value;
+            const pmEl = document.getElementById('modal-pm');
+            if (pmEl) card.projectManager = pmEl.value || '';
+            const projectTypeEl = document.getElementById('modal-project-type');
+            if (projectTypeEl) card.projectType = projectTypeEl.value || 'individual';
+            
+            saveCard(card);
+        }
+
+        function deleteCard() {
+            if (selectedCardId && confirm('Are you sure you want to delete this card?')) {
+                deleteCardFromDB(selectedCardId);
+                closeModal();
+            }
+        }
+
+        document.getElementById('close-modal').addEventListener('click', closeModal);
+        document.getElementById('delete-card').addEventListener('click', deleteCard);
+        
+        document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-backdrop') closeModal();
+        });
+
+        document.getElementById('add-checklist-btn').addEventListener('click', () => {
+            if (!currentEditingCard) {
+                currentEditingCard = cards.find(c => c.id === selectedCardId);
+            }
+            if (!currentEditingCard) return;
+            
+            if (!currentEditingCard.checklists) currentEditingCard.checklists = [];
+            currentEditingCard.checklists.push({
+                id: Date.now().toString(),
+                title: 'New Checklist',
+                items: []
+            });
+            saveCard(currentEditingCard);
+            renderChecklists(currentEditingCard);
+        });
+
+        let debounceTimer;
+        function debounceUpdate() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updateCard, 300);
+        }
+
+        let checklistDebounceTimer;
+        let currentEditingCard = null;
+        
+        function debounceSaveCard() {
+            clearTimeout(checklistDebounceTimer);
+            checklistDebounceTimer = setTimeout(() => {
+                if (currentEditingCard) {
+                    saveCard(currentEditingCard);
+                }
+            }, 300);
+        }
+
+        ['modal-title', 'modal-description', 'modal-target', 'modal-scope', 'modal-risks'].forEach(id => {
+            document.getElementById(id).addEventListener('input', debounceUpdate);
+        });
+
+        document.getElementById('modal-column').addEventListener('change', updateCard);
+        const modalPm = document.getElementById('modal-pm');
+        if (modalPm) modalPm.addEventListener('change', updateCard);
+        const modalProjectType = document.getElementById('modal-project-type');
+        if (modalProjectType) modalProjectType.addEventListener('change', updateCard);
+
+        setupGeneralTaskAdd('Mildred');
+        setupGeneralTaskAdd('Diana');
+        setupTeamTaskAdd();
+        initRoadmap();
+    </script>
+</body>
+</html>
